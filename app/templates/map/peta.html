@@ -1,0 +1,57 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Peta Cluster — Pemetaan Ketimpangan Digital{% endblock %}
+
+{% block head_extra %}
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %}
+
+{% block topbar_actions %}
+    <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;">
+        <input type="hidden" name="n_clusters" value="3" />
+        <input type="hidden" name="next" value="{{ url_for('map.peta') }}" />
+        <button class="btn btn-primary" type="submit">Refresh Cluster</button>
+    </form>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Peta Cluster</h2>
+        <p>Visualisasi tematik hasil clustering kabupaten/kota Jawa Barat</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div id="peta" class="map-wrap" style="height:560px;"></div>
+            <div class="map-legend">
+                <span class="legend-item"><span class="swatch" style="background:#16a34a"></span>Tinggi</span>
+                <span class="legend-item"><span class="swatch" style="background:#eab308"></span>Sedang</span>
+                <span class="legend-item"><span class="swatch" style="background:#dc2626"></span>Rendah</span>
+                <span class="legend-item"><span class="swatch" style="background:#cbd5e1"></span>Tanpa Data</span>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+    (function () {
+        const map = L.map('peta', { scrollWheelZoom: false }).setView([-6.9, 107.6], 8);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18,
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        // Basic map — render GeoJSON only (no cluster colors yet — added in #26)
+        fetch('{{ url_for("static", filename="geojson/jabar_kabkota.geojson") }}')
+            .then(r => r.ok ? r.json() : null)
+            .then(geo => {
+                if (!geo) return;
+                L.geoJSON(geo, {
+                    style: { fillColor: '#cbd5e1', weight: 1, color: '#fff', fillOpacity: 0.85 }
+                }).addTo(map);
+            });
+    })();
+</script>
+{% endblock %}
