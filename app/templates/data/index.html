@@ -1,0 +1,115 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Data Ketimpangan Digital{% endblock %}
+
+{% block topbar_actions %}
+    {% if current_user and current_user.role == 'admin' %}
+        <a class="btn btn-outline" href="{{ url_for('wilayah.index') }}">Kelola Wilayah</a>
+        <a class="btn btn-primary" href="{{ url_for('data.upload') }}" style="margin-left:8px;">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                <polyline points="9 9 12 6 15 9"></polyline><line x1="12" y1="6" x2="12" y2="16"></line>
+            </svg>
+            Upload Dataset
+        </a>
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Data Ketimpangan Digital</h2>
+        <p>Indikator ketimpangan digital kabupaten/kota Jawa Barat</p>
+    </div>
+
+    {% if current_user and current_user.role == 'admin' %}
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-body">
+                <h3 class="card-title">Tambah / Update Data</h3>
+                <form method="post" action="{{ url_for('data.create') }}" class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="wilayah_id">Wilayah</label>
+                        <select class="form-control" id="wilayah_id" name="wilayah_id" required>
+                            <option value="">Pilih wilayah…</option>
+                            {% for w in wilayah %}
+                                <option value="{{ w.id }}">{{ w.nama_wilayah }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="tahun">Tahun</label>
+                        <input class="form-control" id="tahun" name="tahun" type="number" value="{{ default_tahun }}" min="2000" max="2100" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="internet">Internet</label>
+                        <input class="form-control" id="internet" name="internet" type="number" step="0.0001" min="0" max="1" required />
+                        <span class="form-help">0.0000 – 1.0000</span>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="laptop">Laptop</label>
+                        <input class="form-control" id="laptop" name="laptop" type="number" step="0.0001" min="0" max="1" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="smartphone">Smartphone</label>
+                        <input class="form-control" id="smartphone" name="smartphone" type="number" step="0.0001" min="0" max="1" required />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="literasi_digital">Literasi Digital</label>
+                        <input class="form-control" id="literasi_digital" name="literasi_digital" type="number" step="0.0001" min="0" max="1" required />
+                    </div>
+                    <div class="form-group" style="grid-column:1/-1;justify-content:flex-end;">
+                        <button class="btn btn-primary" type="submit">Simpan</button>
+                    </div>
+                </form>
+                <p class="form-help" style="margin-top:8px;">
+                    Jika wilayah/tahun sudah ada, data akan diperbarui (upsert).
+                </p>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap" style="border:none;border-radius:0;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Wilayah</th>
+                            <th>Tahun</th>
+                            <th>Internet</th>
+                            <th>Laptop</th>
+                            <th>Smartphone</th>
+                            <th>Literasi Digital</th>
+                            {% if current_user and current_user.role == 'admin' %}
+                                <th>Aksi</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in items %}
+                            <tr>
+                                <td>{{ d.id }}</td>
+                                <td>{{ d.nama_wilayah }}</td>
+                                <td>{{ d.tahun }}</td>
+                                <td>{{ '%.4f' % d.internet }}</td>
+                                <td>{{ '%.4f' % d.laptop }}</td>
+                                <td>{{ '%.4f' % d.smartphone }}</td>
+                                <td>{{ '%.4f' % d.literasi_digital }}</td>
+                                {% if current_user and current_user.role == 'admin' %}
+                                    <td>
+                                        <form method="post" action="{{ url_for('data.delete', data_id=d.id) }}"
+                                              onsubmit="return confirm('Hapus data ini?');" style="display:inline;">
+                                            <button class="btn btn-danger btn-sm" type="submit">Hapus</button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="8" style="text-align:center;color:var(--text-muted);">Belum ada data.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
