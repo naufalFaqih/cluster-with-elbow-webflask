@@ -89,16 +89,37 @@
 
                     if (matched) {
                         const html =
-                            '<div style="font-size:13px;line-height:1.5;">' +
-                            '<strong style="font-size:14px;">' + matched.nama_wilayah + '</strong><br>' +
-                            'Tahun: ' + (matched.tahun || '-') + '<br>' +
-                            'Cluster: <strong>' + matched.cluster + '</strong> · ' +
-                            '<span style="color:' + (colorMap[matched.kategori] || '#475569') + ';font-weight:600;">' + matched.kategori + '</span>' +
-                            '<hr style="margin:6px 0;border:none;border-top:1px solid #e5e7eb;">' +
-                            'Internet: ' + Number(matched.internet).toFixed(4) + '<br>' +
-                            'Laptop: ' + Number(matched.laptop).toFixed(4) + '<br>' +
-                            'Smartphone: ' + Number(matched.smartphone).toFixed(4) + '<br>' +
-                            'Literasi Digital: ' + Number(matched.literasi_digital).toFixed(4) +
+                            '<div style="font-size:13px;line-height:1.5;min-width:240px;">' +
+                            '<strong style="font-size:14px;color:#1f2937;">' + matched.nama_wilayah + '</strong>' +
+                            '<div style="color:#6b7280;font-size:12px;">Tahun ' + (matched.tahun || '-') + '</div>' +
+                            '<div style="margin-top:6px;display:flex;align-items:center;gap:6px;">' +
+                                '<span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:' + (colorMap[matched.kategori] || '#475569') + ';"></span>' +
+                                '<span><strong>Cluster ' + matched.cluster + '</strong> · ' +
+                                    '<span style="color:' + (colorMap[matched.kategori] || '#475569') + ';font-weight:600;">' + matched.kategori + '</span>' +
+                                '</span>' +
+                            '</div>' +
+                            '<hr style="margin:8px 0;border:none;border-top:1px solid #e5e7eb;">' +
+                            '<table style="width:100%;font-size:12px;border-collapse:collapse;">' +
+                                '<thead><tr style="color:#6b7280;text-align:left;">' +
+                                    '<th style="padding:2px 0;font-weight:500;">Indikator</th>' +
+                                    '<th style="padding:2px 0;font-weight:500;text-align:right;">Asli</th>' +
+                                    '<th style="padding:2px 0;font-weight:500;text-align:right;">Norm</th>' +
+                                '</tr></thead>' +
+                                '<tbody>' +
+                                    '<tr><td>Internet</td>' +
+                                        '<td style="text-align:right;">' + Number(matched.internet).toFixed(4) + '</td>' +
+                                        '<td style="text-align:right;">' + (matched.internet_norm != null ? Number(matched.internet_norm).toFixed(3) : '-') + '</td></tr>' +
+                                    '<tr><td>Laptop</td>' +
+                                        '<td style="text-align:right;">' + Number(matched.laptop).toFixed(4) + '</td>' +
+                                        '<td style="text-align:right;">' + (matched.laptop_norm != null ? Number(matched.laptop_norm).toFixed(3) : '-') + '</td></tr>' +
+                                    '<tr><td>Smartphone</td>' +
+                                        '<td style="text-align:right;">' + Number(matched.smartphone).toFixed(4) + '</td>' +
+                                        '<td style="text-align:right;">' + (matched.smartphone_norm != null ? Number(matched.smartphone_norm).toFixed(3) : '-') + '</td></tr>' +
+                                    '<tr><td>Literasi Digital</td>' +
+                                        '<td style="text-align:right;">' + Number(matched.literasi_digital).toFixed(4) + '</td>' +
+                                        '<td style="text-align:right;">' + (matched.literasi_digital_norm != null ? Number(matched.literasi_digital_norm).toFixed(3) : '-') + '</td></tr>' +
+                                '</tbody>' +
+                            '</table>' +
                             '</div>';
                         lyr.bindPopup(html);
                     } else {
