@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login — Pemetaan Ketimpangan Digital Jawa Barat</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+<body>
+    <div class="login-shell">
+        <div class="login-card">
+            <div class="brand">
+                <div class="brand-logo" style="width:48px;height:48px;border-radius:50%;background:#2563eb;display:flex;align-items:center;justify-content:center;color:#fff;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                        <path d="M3 21l18 0"></path>
+                        <path d="M3 10l18 0"></path>
+                        <path d="M5 6l7-3l7 3"></path>
+                        <path d="M4 10l0 11"></path>
+                        <path d="M20 10l0 11"></path>
+                        <path d="M8 14l0 3"></path>
+                        <path d="M12 14l0 3"></path>
+                        <path d="M16 14l0 3"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h2>Pemetaan Ketimpangan Digital</h2>
+                    <p class="muted">Provinsi Jawa Barat</p>
+                </div>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="flash-messages" style="margin:0 0 16px;">
+                        {% for cat, msg in messages %}
+                            <div class="flash flash-{{ cat }}">{{ msg }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+
+            {% if error %}
+                <div class="flash flash-danger" style="margin-bottom:16px;">{{ error }}</div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('auth.login') }}" class="form-grid" style="grid-template-columns:1fr;">
+                <div class="form-group">
+                    <label class="form-label" for="username">Username</label>
+                    <input class="form-control" id="username" name="username" type="text" required autofocus />
+                </div>
+                <div class="form-group">
+                    <label class="form-label" for="password">Password</label>
+                    <input class="form-control" id="password" name="password" type="password" required />
+                </div>
+                <button type="submit" class="btn btn-primary" style="justify-content:center;">Masuk</button>
+            </form>
+
+            <p class="form-help" style="text-align:center;margin-top:18px;">
+                Akun default: <strong>admin / admin123</strong> · <strong>user / user123</strong>
+            </p>
+        </div>
+    </div>
+</body>
+</html>
