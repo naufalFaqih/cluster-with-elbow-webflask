@@ -14,21 +14,36 @@ def create_app(config_class: type = Config) -> Flask:
     )
     app.config.from_object(config_class)
 
-    # Ensure upload folder exists
     Path(app.config["UPLOAD_FOLDER"]).mkdir(parents=True, exist_ok=True)
 
-    # Initialise DB helper
     from app.db import init_app as init_db
 
     init_db(app)
 
     # Blueprints
     from app.routes.auth_routes import bp as auth_bp
+    from app.routes.dashboard_routes import bp as dashboard_bp
 
     app.register_blueprint(auth_bp)
+    app.register_blueprint(dashboard_bp)
 
     @app.route("/")
     def index():
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("dashboard.index"))
+
+    @app.context_processor
+    def inject_globals():
+        from flask import session
+
+        return {
+            "current_user": {
+                "id": session.get("user_id"),
+                "nama": session.get("user_nama"),
+                "username": session.get("user_username"),
+                "role": session.get("user_role"),
+            }
+            if session.get("user_id")
+            else None,
+        }
 
     return app
