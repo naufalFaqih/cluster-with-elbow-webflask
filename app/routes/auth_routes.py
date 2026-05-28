@@ -1,4 +1,4 @@
-"""Auth routes — login (PRD #7)."""
+"""Auth routes — login & logout (PRD #7, #8)."""
 from __future__ import annotations
 
 from flask import Blueprint, flash, redirect, render_template, request, session, url_for
@@ -34,3 +34,10 @@ def login():
                 return redirect(url_for("auth.login"))
 
     return render_template("auth/login.html", error=error)
+
+
+@bp.route("/logout")
+def logout():
+    session.clear()
+    flash("Anda telah logout.", "info")
+    return redirect(url_for("auth.login"))
