@@ -37,21 +37,88 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
     (function () {
-        const map = L.map('peta', { scrollWheelZoom: false }).setView([-6.9, 107.6], 8);
+        const map = L.map('peta', { scrollWheelZoom: true }).setView([-6.9, 107.6], 8);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 18,
             attribution: '© OpenStreetMap'
         }).addTo(map);
 
-        // Basic map — render GeoJSON only (no cluster colors yet — added in #26)
-        fetch('{{ url_for("static", filename="geojson/jabar_kabkota.geojson") }}')
-            .then(r => r.ok ? r.json() : null)
-            .then(geo => {
-                if (!geo) return;
-                L.geoJSON(geo, {
-                    style: { fillColor: '#cbd5e1', weight: 1, color: '#fff', fillOpacity: 0.85 }
-                }).addTo(map);
+        function pickName(props) {
+            return ((props.nama_kabkota || props.WADMKK || props.NAME_2 || props.name || '') + '').toUpperCase().trim();
+        }
+
+        // PRD #26 + #27 — color by cluster + detail popup
+        Promise.all([
+            fetch('{{ url_for("static", filename="geojson/jabar_kabkota.geojson") }}').then(r => r.ok ? r.json() : null),
+            fetch('{{ url_for("map.api_hasil") }}').then(r => r.ok ? r.json() : null),
+        ]).then(([geo, hasilResp]) => {
+            if (!geo) return;
+            const items = (hasilResp && hasilResp.items) || [];
+            const colorMap = (hasilResp && hasilResp.warna) || { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
+
+            // Index hasil by name + alias (KAB, KOTA prefixes)
+            const byNama = {};
+            items.forEach(it => {
+                const key = (it.nama_wilayah || '').toUpperCase();
+                byNama[key] = it;
             });
+
+            function findMatch(nama) {
+                if (!nama) return null;
+                const candidates = [
+                    nama,
+                    'KABUPATEN ' + nama,
+                    'KOTA ' + nama,
+                    nama.replace(/^KAB\.?\s+/i, 'KABUPATEN '),
+                ];
+                for (const c of candidates) {
+                    if (byNama[c]) return byNama[c];
+                }
+                return null;
+            }
+
+            const layer = L.geoJSON(geo, {
+                style: function (f) {
+                    const matched = findMatch(pickName(f.properties || {}));
+                    const fill = matched ? (colorMap[matched.kategori] || '#cbd5e1') : '#cbd5e1';
+                    return { fillColor: fill, weight: 1, color: '#fff', fillOpacity: 0.85 };
+                },
+                onEachFeature: function (f, lyr) {
+                    const nama = pickName(f.properties || {});
+                    const matched = findMatch(nama);
+
+                    if (matched) {
+                        const html =
+                            '<div style="font-size:13px;line-height:1.5;">' +
+                            '<strong style="font-size:14px;">' + matched.nama_wilayah + '</strong><br>' +
+                            'Tahun: ' + (matched.tahun || '-') + '<br>' +
+                            'Cluster: <strong>' + matched.cluster + '</strong> · ' +
+                            '<span style="color:' + (colorMap[matched.kategori] || '#475569') + ';font-weight:600;">' + matched.kategori + '</span>' +
+                            '<hr style="margin:6px 0;border:none;border-top:1px solid #e5e7eb;">' +
+                            'Internet: ' + Number(matched.internet).toFixed(4) + '<br>' +
+                            'Laptop: ' + Number(matched.laptop).toFixed(4) + '<br>' +
+                            'Smartphone: ' + Number(matched.smartphone).toFixed(4) + '<br>' +
+                            'Literasi Digital: ' + Number(matched.literasi_digital).toFixed(4) +
+                            '</div>';
+                        lyr.bindPopup(html);
+                    } else {
+                        lyr.bindPopup('<strong>' + nama + '</strong><br>Belum ada hasil clustering.');
+                    }
+
+                    // Hover highlight
+                    lyr.on('mouseover', function () {
+                        lyr.setStyle({ weight: 2, color: '#1e293b' });
+                    });
+                    lyr.on('mouseout', function () {
+                        lyr.setStyle({ weight: 1, color: '#fff' });
+                    });
+                }
+            }).addTo(map);
+
+            try {
+                map.fitBounds(layer.getBounds(), { padding: [20, 20] });
+            } catch (_) {}
+        }).catch(() => {});
     })();
 </script>
 {% endblock %}
