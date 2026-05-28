@@ -1,0 +1,103 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Elbow Method — Pemetaan Ketimpangan Digital{% endblock %}
+
+{% block topbar_actions %}
+    <form method="post" action="{{ url_for('clustering.elbow') }}" style="display:inline;">
+        <button class="btn btn-primary" type="submit">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 11a8.1 8.1 0 0 0-15.5-2"></path><polyline points="4 5 4 11 10 11"></polyline>
+            </svg>
+            Jalankan Analisis
+        </button>
+    </form>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Elbow Method</h2>
+        <p>Penentuan jumlah cluster (k) optimal berdasarkan SSE (inertia)</p>
+    </div>
+
+    {% if not elbow_data %}
+        <div class="alert-info-soft">
+            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            <span>Belum ada data evaluasi. Klik <strong>Jalankan Analisis</strong> untuk menghitung SSE.</span>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body">
+            <h3 class="card-title">Grafik Elbow (SSE)</h3>
+            <div class="chart-wrap" style="height:320px;">
+                <canvas id="chart-elbow"></canvas>
+            </div>
+        </div>
+    </div>
+
+    {% if elbow_data %}
+        <div class="card" style="margin-top:16px;">
+            <div class="card-body" style="padding:0;">
+                <div class="table-wrap" style="border:none;border-radius:0;">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th style="width:120px;">k</th>
+                                <th>SSE (Inertia)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for row in elbow_data %}
+                                <tr>
+                                    <td>{{ row.k }}</td>
+                                    <td>{{ '%.6f' % row.sse }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const elbow = {{ elbow_data | tojson }};
+
+        const ctx = document.getElementById('chart-elbow');
+        if (ctx) {
+            const labels = elbow.length ? elbow.map(r => r.k) : [1, 2, 3, 4, 5, 6, 7];
+            const data = elbow.length ? elbow.map(r => r.sse) : [1.2, 0.95, 0.65, 0.45, 0.38, 0.25, 0.21];
+
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'SSE',
+                        data: data,
+                        borderColor: '#2563eb',
+                        backgroundColor: 'rgba(37,99,235,.15)',
+                        pointBackgroundColor: '#2563eb',
+                        pointRadius: 4,
+                        tension: 0.3,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, title: { display: true, text: 'SSE (Inertia)' } },
+                        x: { title: { display: true, text: 'Jumlah Cluster (k)' } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+    </script>
+{% endblock %}
