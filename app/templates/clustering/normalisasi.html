@@ -1,0 +1,57 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Normalisasi Data — Pemetaan Ketimpangan Digital{% endblock %}
+
+{% block topbar_actions %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Normalisasi Data</h2>
+        <p>Hasil normalisasi indikator menggunakan <strong>MinMaxScaler</strong> (rentang 0 – 1)</p>
+    </div>
+
+    <div class="card">
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap" style="border:none;border-radius:0;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Wilayah</th>
+                            <th>Tahun</th>
+                            <th>Internet</th>
+                            <th>Laptop</th>
+                            <th>Smartphone</th>
+                            <th>Literasi Digital</th>
+                            <th>Internet (norm)</th>
+                            <th>Laptop (norm)</th>
+                            <th>Smartphone (norm)</th>
+                            <th>Literasi (norm)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for d in items %}
+                            <tr>
+                                <td>{{ d.nama_wilayah }}</td>
+                                <td>{{ d.tahun }}</td>
+                                <td>{{ '%.4f' % d.internet }}</td>
+                                <td>{{ '%.4f' % d.laptop }}</td>
+                                <td>{{ '%.4f' % d.smartphone }}</td>
+                                <td>{{ '%.4f' % d.literasi_digital }}</td>
+                                <td>{{ '%.4f' % d.internet_norm }}</td>
+                                <td>{{ '%.4f' % d.laptop_norm }}</td>
+                                <td>{{ '%.4f' % d.smartphone_norm }}</td>
+                                <td>{{ '%.4f' % d.literasi_digital_norm }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="10" style="text-align:center;color:var(--text-muted);">Belum ada data untuk dinormalisasi.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <p class="form-help" style="margin-top:12px;">
+        Nilai pada tabel ini hanya untuk preview. Nilai asli (tidak dibulatkan) tetap dipakai untuk K-Means.
+    </p>
+{% endblock %}
