@@ -1,0 +1,49 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Upload Dataset — Pemetaan Ketimpangan Digital{% endblock %}
+
+{% block topbar_actions %}
+    <a class="btn btn-outline" href="{{ url_for('data.index') }}">Kembali ke Data</a>
+{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Upload Dataset</h2>
+        <p>Import data ketimpangan digital dari file Excel/CSV</p>
+    </div>
+
+    <div class="card" style="max-width:680px;">
+        <div class="card-body">
+            <h3 class="card-title">Pilih File</h3>
+            <form method="post" action="{{ url_for('data.upload') }}" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label" for="file">File Excel (.xlsx, .xls) atau CSV</label>
+                    <input class="form-control" type="file" id="file" name="file" accept=".xlsx,.xls,.csv" required />
+                </div>
+
+                <div class="alert-info-soft" style="margin:16px 0;">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <div>
+                        <strong>Kolom wajib:</strong>
+                        <code>wilayah</code>, <code>tahun</code>, <code>internet</code>,
+                        <code>laptop</code>, <code>smartphone</code>, <code>literasi_digital</code>.
+                        <br />
+                        Sistem akan menyamakan nama wilayah ke huruf kapital. Jika wilayah belum ada,
+                        akan dibuat otomatis. Data dengan wilayah/tahun yang sama akan diperbarui.
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" type="submit">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+                        <polyline points="9 9 12 6 15 9"></polyline><line x1="12" y1="6" x2="12" y2="16"></line>
+                    </svg>
+                    Upload &amp; Import
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
