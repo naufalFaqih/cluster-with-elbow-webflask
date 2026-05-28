@@ -40,6 +40,8 @@ def normalisasi():
 def elbow():
     rows = data_ketimpangan_model.all_data()
     elbow_data: list[dict] = []
+    silhouette_data: list[dict] = []
+    rekomendasi: int | None = None
     error: str | None = None
 
     run_now = request.method == "POST" or request.args.get("run") == "1"
@@ -50,7 +52,13 @@ def elbow():
             matrix, _ = normalization_service.normalize(df)
             result = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=10)
             elbow_data = result.elbow
-            flash("Analisis Elbow Method berhasil dijalankan.", "success")
+            silhouette_data = result.silhouette
+            rekomendasi = result.rekomendasi_silhouette
+            flash(
+                f"Analisis selesai. Rekomendasi k = {rekomendasi}." if rekomendasi
+                else "Analisis Elbow selesai.",
+                "success",
+            )
         except preprocessing_service.PreprocessingError as exc:
             error = str(exc)
             flash(error, "danger")
@@ -61,5 +69,7 @@ def elbow():
     return render_template(
         "clustering/elbow.html",
         elbow_data=elbow_data,
+        silhouette_data=silhouette_data,
+        rekomendasi=rekomendasi,
         error=error,
     )
