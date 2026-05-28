@@ -1,8 +1,9 @@
-"""Clustering routes — normalisasi, elbow, K-Means proses (PRD #16, #17, #18, #21)."""
+"""Clustering routes — normalisasi, elbow, K-Means proses (PRD #16, #17, #18, #21, #22, #23)."""
 from __future__ import annotations
 
 from flask import (
     Blueprint,
+    Response,
     flash,
     redirect,
     render_template,
@@ -17,6 +18,7 @@ from app.models import (
 from app.routes.decorators import login_required
 from app.services import (
     evaluation_service,
+    export_service,
     kmeans_service,
     normalization_service,
     preprocessing_service,
@@ -137,3 +139,36 @@ def hasil():
         items=items,
         distribusi=distribusi,
     )
+
+
+# ---------------------------------------------------------------------------
+# Export hasil clustering (PRD #23)
+# ---------------------------------------------------------------------------
+@bp.route("/export/<fmt>")
+@login_required
+def export(fmt: str):
+    fmt = (fmt or "").lower()
+    rows = hasil_clustering_model.all_hasil()
+    if not rows:
+        flash("Belum ada hasil clustering untuk di-export.", "warning")
+        return redirect(url_for("clustering.hasil"))
+
+    if fmt in ("excel", "xlsx"):
+        data = export_service.to_excel_bytes(rows)
+        return Response(
+            data,
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": "attachment; filename=hasil_clustering.xlsx"
+            },
+        )
+    if fmt == "csv":
+        data = export_service.to_csv_bytes(rows)
+        return Response(
+            data,
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=hasil_clustering.csv"},
+        )
+
+    flash("Format export tidak dikenali. Gunakan 'excel' atau 'csv'.", "danger")
+    return redirect(url_for("clustering.hasil"))
