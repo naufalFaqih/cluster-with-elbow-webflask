@@ -3,7 +3,15 @@
 {% block title %}Hasil Clustering — Pemetaan Ketimpangan Digital{% endblock %}
 
 {% block topbar_actions %}
-    <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;margin-right:8px;">
+    <a class="btn btn-outline" href="{{ url_for('clustering.export', fmt='csv') }}">CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('clustering.export', fmt='excel') }}" style="margin-left:8px;">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+            <polyline points="7 11 12 16 17 11"></polyline><line x1="12" y1="4" x2="12" y2="16"></line>
+        </svg>
+        Export Hasil
+    </a>
+    <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;margin-left:8px;">
         <input type="hidden" name="n_clusters" value="3" />
         <button class="btn btn-outline" type="submit">Jalankan Ulang (k=3)</button>
     </form>
