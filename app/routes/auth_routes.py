@@ -11,7 +11,7 @@ bp = Blueprint("auth", __name__, url_prefix="/auth")
 @bp.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("auth.login"))
+        return redirect(url_for("dashboard.index"))
 
     error = None
     if request.method == "POST":
@@ -31,7 +31,7 @@ def login():
                 session["user_username"] = user["username"]
                 session["user_role"] = user["role"]
                 flash(f"Selamat datang, {user['nama']}!", "success")
-                return redirect(url_for("auth.login"))
+                return redirect(url_for("dashboard.index"))
 
     return render_template("auth/login.html", error=error)
 
