@@ -1,0 +1,86 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Data Wilayah — Pemetaan Ketimpangan Digital{% endblock %}
+
+{% block topbar_actions %}{% endblock %}
+
+{% block content %}
+    <div class="page-header">
+        <h2>Data Wilayah</h2>
+        <p>Daftar kabupaten/kota Provinsi Jawa Barat</p>
+    </div>
+
+    {% if current_user and current_user.role == 'admin' %}
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-body">
+                <h3 class="card-title">Tambah Wilayah</h3>
+                <form method="post" action="{{ url_for('wilayah.create') }}" class="form-grid">
+                    <div class="form-group">
+                        <label class="form-label" for="nama_wilayah">Nama Wilayah</label>
+                        <input class="form-control" id="nama_wilayah" name="nama_wilayah" required placeholder="Mis: KABUPATEN BOGOR" />
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" for="provinsi">Provinsi</label>
+                        <input class="form-control" id="provinsi" name="provinsi" value="Jawa Barat" />
+                    </div>
+                    <div class="form-group" style="justify-content:flex-end;">
+                        <button class="btn btn-primary" type="submit">Tambah</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="card-body" style="padding:0;">
+            <div class="table-wrap" style="border:none;border-radius:0;">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th style="width:60px;">ID</th>
+                            <th>Nama Wilayah</th>
+                            <th>Provinsi</th>
+                            {% if current_user and current_user.role == 'admin' %}
+                                <th style="width:200px;">Aksi</th>
+                            {% endif %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for w in items %}
+                            <tr>
+                                <td>{{ w.id }}</td>
+                                <td>
+                                    <form method="post" action="{{ url_for('wilayah.update', wilayah_id=w.id) }}" style="display:flex;gap:8px;">
+                                        {% if current_user and current_user.role == 'admin' %}
+                                            <input class="form-control" name="nama_wilayah" value="{{ w.nama_wilayah }}" required style="flex:1;" />
+                                        {% else %}
+                                            {{ w.nama_wilayah }}
+                                        {% endif %}
+                                </td>
+                                <td>
+                                        {% if current_user and current_user.role == 'admin' %}
+                                            <input class="form-control" name="provinsi" value="{{ w.provinsi }}" style="width:160px;" />
+                                        {% else %}
+                                            {{ w.provinsi }}
+                                        {% endif %}
+                                </td>
+                                {% if current_user and current_user.role == 'admin' %}
+                                    <td style="display:flex;gap:6px;">
+                                            <button type="submit" class="btn btn-outline btn-sm">Update</button>
+                                        </form>
+                                        <form method="post" action="{{ url_for('wilayah.delete', wilayah_id=w.id) }}"
+                                              onsubmit="return confirm('Hapus wilayah ini? Data ketimpangan dan hasil clustering terkait akan ikut terhapus.');">
+                                            <button type="submit" class="btn btn-danger btn-sm">Hapus</button>
+                                        </form>
+                                    </td>
+                                {% endif %}
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Belum ada data wilayah.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
