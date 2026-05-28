@@ -1,10 +1,14 @@
 """Clustering routes — normalisasi, elbow, K-Means proses (PRD #16, #17, #18, #21, #22, #23)."""
 from __future__ import annotations
 
+import math
+from typing import Any
+
 from flask import (
     Blueprint,
     Response,
     flash,
+    jsonify,
     redirect,
     render_template,
     request,
@@ -25,6 +29,19 @@ from app.services import (
 )
 
 bp = Blueprint("clustering", __name__, url_prefix="/clustering")
+
+
+def _safe_number(value: Any):
+    """Convert NaN/inf -> None for JSON-friendly responses."""
+    if value is None:
+        return None
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    if math.isnan(f) or math.isinf(f):
+        return None
+    return f
 
 
 @bp.route("/normalisasi")
@@ -139,6 +156,42 @@ def hasil():
         items=items,
         distribusi=distribusi,
     )
+
+
+# ---------------------------------------------------------------------------
+# JSON endpoints (for dashboard widgets)
+# ---------------------------------------------------------------------------
+@bp.route("/api/distribusi")
+@login_required
+def api_distribusi():
+    return jsonify({"distribusi": hasil_clustering_model.distribusi()})
+
+
+@bp.route("/api/elbow")
+@login_required
+def api_elbow():
+    """Compute Elbow + Silhouette on-the-fly for dashboard widget."""
+    rows = data_ketimpangan_model.all_data()
+    if not rows:
+        return jsonify({"elbow": [], "silhouette": [], "rekomendasi": None})
+    try:
+        df = preprocessing_service.to_feature_matrix(rows)
+        matrix, _ = normalization_service.normalize(df)
+        result = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=7)
+        return jsonify(
+            {
+                "elbow": [
+                    {"k": r["k"], "sse": _safe_number(r["sse"])} for r in result.elbow
+                ],
+                "silhouette": [
+                    {"k": r["k"], "score": _safe_number(r["score"])}
+                    for r in result.silhouette
+                ],
+                "rekomendasi": result.rekomendasi_silhouette,
+            }
+        )
+    except Exception as exc:  # noqa: BLE001
+        return jsonify({"error": str(exc), "elbow": [], "silhouette": []}), 400
 
 
 # ---------------------------------------------------------------------------
