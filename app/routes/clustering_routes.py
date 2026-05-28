@@ -125,3 +125,15 @@ def proses():
 
     next_url = request.form.get("next") or url_for("dashboard.index")
     return redirect(next_url)
+
+
+@bp.route("/hasil")
+@login_required
+def hasil():
+    items = hasil_clustering_model.all_hasil()
+    distribusi = hasil_clustering_model.distribusi()
+    return render_template(
+        "clustering/hasil.html",
+        items=items,
+        distribusi=distribusi,
+    )
