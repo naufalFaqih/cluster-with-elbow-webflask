@@ -23,9 +23,11 @@ def create_app(config_class: type = Config) -> Flask:
     # Blueprints
     from app.routes.auth_routes import bp as auth_bp
     from app.routes.dashboard_routes import bp as dashboard_bp
+    from app.routes.wilayah_routes import bp as wilayah_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(dashboard_bp)
+    app.register_blueprint(wilayah_bp)
 
     @app.route("/")
     def index():
