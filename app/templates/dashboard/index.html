@@ -1,290 +1,294 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/base.html" %} {% block title %}Dashboard — Pemetaan Ketimpangan Digital{% endblock %} {% block head_extra %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+{% endblock %} {% block topbar_actions %}
+<a class="btn btn-primary" href="{{ url_for('clustering.export', fmt='excel') }}">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+    <polyline points="7 11 12 16 17 11"></polyline>
+    <line x1="12" y1="4" x2="12" y2="16"></line>
+  </svg>
+  Export Hasil
+</a>
+{% endblock %} {% block content %}
+<div class="page-header">
+  <h2>Dashboard</h2>
+  <p>Ringkasan analisis ketimpangan digital di Provinsi Jawa Barat</p>
+</div>
 
-{% block title %}Dashboard — Pemetaan Ketimpangan Digital{% endblock %}
+<!-- Stat cards -->
+<div class="stat-grid">
+  <div class="stat-card">
+    <div class="stat-label">Total Kabupaten/Kota</div>
+    <div class="stat-icon-wrap bg-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="4" y="3" width="16" height="18" rx="2"></rect>
+        <line x1="8" y1="7" x2="10" y2="7"></line>
+        <line x1="14" y1="7" x2="16" y2="7"></line>
+        <line x1="8" y1="11" x2="10" y2="11"></line>
+        <line x1="14" y1="11" x2="16" y2="11"></line>
+        <line x1="8" y1="15" x2="10" y2="15"></line>
+        <line x1="14" y1="15" x2="16" y2="15"></line>
+      </svg>
+    </div>
+    <div class="stat-value">{{ jumlah_wilayah }}</div>
+    <div class="stat-sub">Kabupaten/Kota</div>
+  </div>
 
-{% block head_extra %}
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-{% endblock %}
+  <div class="stat-card">
+    <div class="stat-label">Variabel Digunakan</div>
+    <div class="stat-icon-wrap bg-green">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <ellipse cx="12" cy="6" rx="8" ry="3"></ellipse>
+        <path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path>
+        <path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path>
+      </svg>
+    </div>
+    <div class="stat-value">{{ jumlah_variabel }}</div>
+    <div class="stat-sub">Variabel</div>
+  </div>
 
-{% block topbar_actions %}
-    <a class="btn btn-primary" href="{{ url_for('clustering.export', fmt='excel') }}">
+  <div class="stat-card">
+    <div class="stat-label">Metode Clustering</div>
+    <div class="stat-icon-wrap bg-purple">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="6" cy="6" r="3"></circle>
+        <circle cx="18" cy="6" r="3"></circle>
+        <circle cx="6" cy="18" r="3"></circle>
+        <circle cx="18" cy="18" r="3"></circle>
+        <line x1="9" y1="6" x2="15" y2="6"></line>
+        <line x1="9" y1="18" x2="15" y2="18"></line>
+        <line x1="6" y1="9" x2="6" y2="15"></line>
+        <line x1="18" y1="9" x2="18" y2="15"></line>
+      </svg>
+    </div>
+    <div class="stat-value">K-Means</div>
+    <div class="stat-sub">Clustering</div>
+  </div>
+
+  <div class="stat-card">
+    <div class="stat-label">Status Analisis</div>
+    <div class="stat-icon-wrap bg-orange">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="9"></circle>
+        <polyline points="12 7 12 12 15 14"></polyline>
+      </svg>
+    </div>
+    {% if jumlah_hasil > 0 %}
+    <div class="stat-value" style="color: #16a34a">Selesai</div>
+    <div class="stat-sub">{{ jumlah_hasil }} wilayah ter-cluster</div>
+    {% else %}
+    <div class="stat-value" style="color: #d97706; font-size: 20px">Belum Analisis</div>
+    <div class="stat-sub">Lakukan proses clustering<br />untuk melihat hasil</div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Elbow + Donut row -->
+<div class="row-two">
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Elbow Method (SSE)</h3>
+      <div class="alert-info-soft">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-            <polyline points="7 11 12 16 17 11"></polyline><line x1="12" y1="4" x2="12" y2="16"></line>
+          <circle cx="12" cy="12" r="9"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
         </svg>
-        Export Hasil
-    </a>
-{% endblock %}
-
-{% block content %}
-    <div class="page-header">
-        <h2>Dashboard</h2>
-        <p>Ringkasan analisis ketimpangan digital di Provinsi Jawa Barat</p>
+        <span>Lakukan analisis Elbow Method untuk menentukan jumlah cluster optimal.</span>
+      </div>
+      <div class="chart-wrap">
+        <canvas id="chart-elbow"></canvas>
+      </div>
+      <div style="margin-top: 14px">
+        <a href="{{ url_for('clustering.elbow', run=1) }}" class="btn btn-primary"> Lakukan Analisis Elbow </a>
+      </div>
     </div>
+  </div>
 
-    <!-- Stat cards -->
-    <div class="stat-grid">
-        <div class="stat-card">
-            <div class="stat-label">Total Kabupaten/Kota</div>
-            <div class="stat-icon-wrap bg-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="4" y="3" width="16" height="18" rx="2"></rect>
-                    <line x1="8" y1="7"  x2="10" y2="7"></line><line x1="14" y1="7"  x2="16" y2="7"></line>
-                    <line x1="8" y1="11" x2="10" y2="11"></line><line x1="14" y1="11" x2="16" y2="11"></line>
-                    <line x1="8" y1="15" x2="10" y2="15"></line><line x1="14" y1="15" x2="16" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-value">{{ jumlah_wilayah }}</div>
-            <div class="stat-sub">Kabupaten/Kota</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Variabel Digunakan</div>
-            <div class="stat-icon-wrap bg-green">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <ellipse cx="12" cy="6" rx="8" ry="3"></ellipse>
-                    <path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6"></path>
-                    <path d="M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"></path>
-                </svg>
-            </div>
-            <div class="stat-value">{{ jumlah_variabel }}</div>
-            <div class="stat-sub">Variabel</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Metode Clustering</div>
-            <div class="stat-icon-wrap bg-purple">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="6"  cy="6"  r="3"></circle><circle cx="18" cy="6"  r="3"></circle>
-                    <circle cx="6"  cy="18" r="3"></circle><circle cx="18" cy="18" r="3"></circle>
-                    <line x1="9" y1="6"  x2="15" y2="6"></line><line x1="9" y1="18" x2="15" y2="18"></line>
-                    <line x1="6" y1="9"  x2="6"  y2="15"></line><line x1="18" y1="9"  x2="18" y2="15"></line>
-                </svg>
-            </div>
-            <div class="stat-value">K-Means</div>
-            <div class="stat-sub">Clustering</div>
-        </div>
-
-        <div class="stat-card">
-            <div class="stat-label">Status Analisis</div>
-            <div class="stat-icon-wrap bg-orange">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="9"></circle>
-                    <polyline points="12 7 12 12 15 14"></polyline>
-                </svg>
-            </div>
-            {% if jumlah_hasil > 0 %}
-                <div class="stat-value" style="color:#16a34a;">Selesai</div>
-                <div class="stat-sub">{{ jumlah_hasil }} wilayah ter-cluster</div>
-            {% else %}
-                <div class="stat-value" style="color:#d97706;font-size:20px;">Belum Analisis</div>
-                <div class="stat-sub">Lakukan proses clustering<br />untuk melihat hasil</div>
-            {% endif %}
-        </div>
+  <div class="card">
+    <div class="card-body">
+      <h3 class="card-title">Distribusi Cluster</h3>
+      {% if jumlah_hasil == 0 %}
+      <div class="alert-warning-soft">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="9"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
+        <span>Lakukan proses clustering untuk melihat distribusi setiap cluster.</span>
+      </div>
+      {% endif %}
+      <div class="donut-wrap">
+        <canvas id="chart-donut"></canvas>
+        <ul class="legend-list" id="donut-legend">
+          <li>
+            <span><span class="swatch" style="background: #16a34a"></span>Cluster 1 — Tinggi</span><span data-key="Tinggi">—</span>
+          </li>
+          <li>
+            <span><span class="swatch" style="background: #eab308"></span>Cluster 2 — Sedang</span><span data-key="Sedang">—</span>
+          </li>
+          <li>
+            <span><span class="swatch" style="background: #dc2626"></span>Cluster 3 — Rendah</span><span data-key="Rendah">—</span>
+          </li>
+        </ul>
+      </div>
+      <div style="margin-top: 14px; text-align: center">
+        <form method="post" action="{{ url_for('clustering.proses') }}" style="display: inline">
+          <input type="hidden" name="n_clusters" value="3" />
+          <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}" />
+          <button type="submit" class="btn btn-primary">Proses Clustering</button>
+        </form>
+      </div>
     </div>
+  </div>
+</div>
 
-    <!-- Elbow + Donut row -->
-    <div class="row-two">
-        <div class="card">
-            <div class="card-body">
-                <h3 class="card-title">Elbow Method (SSE)</h3>
-                <div class="alert-info-soft">
-                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line>
-                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                    </svg>
-                    <span>Lakukan analisis Elbow Method untuk menentukan jumlah cluster optimal.</span>
-                </div>
-                <div class="chart-wrap">
-                    <canvas id="chart-elbow"></canvas>
-                </div>
-                <div style="margin-top:14px;">
-                    <a href="{{ url_for('clustering.elbow', run=1) }}" class="btn btn-primary">
-                        Lakukan Analisis Elbow
-                    </a>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-body">
-                <h3 class="card-title">Distribusi Cluster</h3>
-                {% if jumlah_hasil == 0 %}
-                    <div class="alert-warning-soft">
-                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="9"></circle><line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <span>Lakukan proses clustering untuk melihat distribusi setiap cluster.</span>
-                    </div>
-                {% endif %}
-                <div class="donut-wrap">
-                    <canvas id="chart-donut"></canvas>
-                    <ul class="legend-list" id="donut-legend">
-                        <li><span><span class="swatch" style="background:#16a34a"></span>Cluster 1 — Tinggi</span><span data-key="Tinggi">—</span></li>
-                        <li><span><span class="swatch" style="background:#eab308"></span>Cluster 2 — Sedang</span><span data-key="Sedang">—</span></li>
-                        <li><span><span class="swatch" style="background:#dc2626"></span>Cluster 3 — Rendah</span><span data-key="Rendah">—</span></li>
-                    </ul>
-                </div>
-                <div style="margin-top:14px;text-align:center;">
-                    <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;">
-                        <input type="hidden" name="n_clusters" value="3" />
-                        <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}" />
-                        <button type="submit" class="btn btn-primary">Proses Clustering</button>
-                    </form>
-                </div>
-            </div>
-        </div>
+<!-- Peta -->
+<div class="card">
+  <div class="card-body">
+    <h3 class="card-title">Peta Cluster</h3>
+    <div id="peta" class="map-wrap" style="height: 380px"></div>
+    <div class="map-legend">
+      <span class="legend-item"><span class="swatch" style="background: #16a34a"></span>Tinggi</span>
+      <span class="legend-item"><span class="swatch" style="background: #eab308"></span>Sedang</span>
+      <span class="legend-item"><span class="swatch" style="background: #dc2626"></span>Rendah</span>
+      <span class="legend-item"><span class="swatch" style="background: #cbd5e1"></span>Tanpa Data</span>
     </div>
-
-    <!-- Peta -->
-    <div class="card">
-        <div class="card-body">
-            <h3 class="card-title">Peta Cluster</h3>
-            <div id="peta" class="map-wrap" style="height:380px;"></div>
-            <div class="map-legend">
-                <span class="legend-item"><span class="swatch" style="background:#16a34a"></span>Tinggi</span>
-                <span class="legend-item"><span class="swatch" style="background:#eab308"></span>Sedang</span>
-                <span class="legend-item"><span class="swatch" style="background:#dc2626"></span>Rendah</span>
-                <span class="legend-item"><span class="swatch" style="background:#cbd5e1"></span>Tanpa Data</span>
-            </div>
-        </div>
-    </div>
-{% endblock %}
-
-{% block scripts %}
+  </div>
+</div>
+{% endblock %} {% block scripts %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-const distribusi = {{ distribusi | tojson }};
+  const distribusi = {{ distribusi | tojson }};
 
-// Donut chart -----------------------------------------------------------
-(function () {
-    const ctx = document.getElementById('chart-donut');
-    if (!ctx) return;
-    const order = ['Tinggi', 'Sedang', 'Rendah'];
-    const colorMap = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
-    const counts = order.map(k => {
-        const found = (distribusi || []).find(d => d.kategori === k);
-        return found ? found.jumlah : 0;
-    });
-    const total = counts.reduce((a, b) => a + b, 0);
+  // Donut chart -----------------------------------------------------------
+  (function () {
+      const ctx = document.getElementById('chart-donut');
+      if (!ctx) return;
+      const order = ['Tinggi', 'Sedang', 'Rendah'];
+      const colorMap = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
+      const counts = order.map(k => {
+          const found = (distribusi || []).find(d => d.kategori === k);
+          return found ? found.jumlah : 0;
+      });
+      const total = counts.reduce((a, b) => a + b, 0);
 
-    new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-            labels: order,
-            datasets: [{
-                data: total === 0 ? [1, 1, 1] : counts,
-                backgroundColor: total === 0
-                    ? ['#e5e7eb', '#e5e7eb', '#e5e7eb']
-                    : order.map(k => colorMap[k]),
-                borderWidth: 0,
-            }]
-        },
-        options: {
-            responsive: true, maintainAspectRatio: false, cutout: '65%',
-            plugins: { legend: { display: false }, tooltip: { enabled: total > 0 } }
-        }
-    });
+      new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+              labels: order,
+              datasets: [{
+                  data: total === 0 ? [1, 1, 1] : counts,
+                  backgroundColor: total === 0
+                      ? ['#e5e7eb', '#e5e7eb', '#e5e7eb']
+                      : order.map(k => colorMap[k]),
+                  borderWidth: 0,
+              }]
+          },
+          options: {
+              responsive: true, maintainAspectRatio: false, cutout: '65%',
+              plugins: { legend: { display: false }, tooltip: { enabled: total > 0 } }
+          }
+      });
 
-    // Update legend numbers
-    document.querySelectorAll('#donut-legend li span[data-key]').forEach(span => {
-        const key = span.dataset.key;
-        const idx = order.indexOf(key);
-        span.textContent = total === 0 ? '—' : counts[idx];
-    });
-})();
+      // Update legend numbers
+      document.querySelectorAll('#donut-legend li span[data-key]').forEach(span => {
+          const key = span.dataset.key;
+          const idx = order.indexOf(key);
+          span.textContent = total === 0 ? '—' : counts[idx];
+      });
+  })();
 
-// Elbow chart -----------------------------------------------------------
-(function () {
-    const ctx = document.getElementById('chart-elbow');
-    if (!ctx) return;
+  // Elbow chart -----------------------------------------------------------
+  (function () {
+      const ctx = document.getElementById('chart-elbow');
+      if (!ctx) return;
 
-    const placeholder = {
-        labels: [1, 2, 3, 4, 5, 6, 7],
-        datasets: [{
-            label: 'SSE',
-            data: [1.2, 0.95, 0.65, 0.45, 0.38, 0.25, 0.21],
-            borderColor: '#9ca3af',
-            backgroundColor: 'rgba(156,163,175,.2)',
-            pointBackgroundColor: '#9ca3af',
-            pointRadius: 4, tension: 0.3, borderDash: [6, 4],
-        }]
-    };
-    const chart = new Chart(ctx, {
-        type: 'line',
-        data: placeholder,
-        options: {
-            responsive: true, maintainAspectRatio: false,
-            scales: {
-                y: { beginAtZero: true, title: { display: true, text: 'SSE' }},
-                x: { title: { display: true, text: 'Jumlah Cluster (k)' }}
-            },
-            plugins: { legend: { display: false }}
-        }
-    });
+      const placeholder = {
+          labels: [1, 2, 3, 4, 5, 6, 7],
+          datasets: [{
+              label: 'SSE',
+              data: [1.2, 0.95, 0.65, 0.45, 0.38, 0.25, 0.21],
+              borderColor: '#9ca3af',
+              backgroundColor: 'rgba(156,163,175,.2)',
+              pointBackgroundColor: '#9ca3af',
+              pointRadius: 4, tension: 0.3, borderDash: [6, 4],
+          }]
+      };
+      const chart = new Chart(ctx, {
+          type: 'line',
+          data: placeholder,
+          options: {
+              responsive: true, maintainAspectRatio: false,
+              scales: {
+                  y: { beginAtZero: true, title: { display: true, text: 'SSE' }},
+                  x: { title: { display: true, text: 'Jumlah Cluster (k)' }}
+              },
+              plugins: { legend: { display: false }}
+          }
+      });
 
-    // Try to fetch real data
-    fetch('{{ url_for("clustering.api_elbow") }}')
-        .then(r => r.ok ? r.json() : null)
-        .then(payload => {
-            if (!payload || !payload.elbow || payload.elbow.length === 0) return;
-            chart.data.labels = payload.elbow.map(p => p.k);
-            chart.data.datasets[0].data = payload.elbow.map(p => p.sse);
-            chart.data.datasets[0].borderColor = '#2563eb';
-            chart.data.datasets[0].backgroundColor = 'rgba(37,99,235,.15)';
-            chart.data.datasets[0].pointBackgroundColor = '#2563eb';
-            chart.data.datasets[0].borderDash = [];
-            chart.update();
-        })
-        .catch(() => {});
-})();
+      // Try to fetch real data
+      fetch('{{ url_for("clustering.api_elbow") }}')
+          .then(r => r.ok ? r.json() : null)
+          .then(payload => {
+              if (!payload || !payload.elbow || payload.elbow.length === 0) return;
+              chart.data.labels = payload.elbow.map(p => p.k);
+              chart.data.datasets[0].data = payload.elbow.map(p => p.sse);
+              chart.data.datasets[0].borderColor = '#2563eb';
+              chart.data.datasets[0].backgroundColor = 'rgba(37,99,235,.15)';
+              chart.data.datasets[0].pointBackgroundColor = '#2563eb';
+              chart.data.datasets[0].borderDash = [];
+              chart.update();
+          })
+          .catch(() => {});
+  })();
 
-// Map ------------------------------------------------------------------
-(function () {
-    const el = document.getElementById('peta');
-    if (!el) return;
-    const map = L.map('peta', { scrollWheelZoom: false }).setView([-6.9, 107.6], 8);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 18,
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
+  // Map ------------------------------------------------------------------
+  (function () {
+      const el = document.getElementById('peta');
+      if (!el) return;
+      const map = L.map('peta', { scrollWheelZoom: false }).setView([-6.9, 107.6], 8);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 18,
+          attribution: '© OpenStreetMap'
+      }).addTo(map);
 
-    const colorMap = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
+      const colorMap = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
 
-    function pickName(props) {
-        return ((props.nama_kabkota || props.WADMKK || props.NAME_2 || props.name || '') + '').toUpperCase().trim();
-    }
+      function pickName(props) {
+          return ((props.nama_kabkota || props.WADMKK || props.NAME_2 || props.name || '') + '').toUpperCase().trim();
+      }
 
-    Promise.all([
-        fetch('{{ url_for("static", filename="geojson/jabar_kabkota.geojson") }}').then(r => r.ok ? r.json() : null),
-        fetch('{{ url_for("map.api_hasil") }}').then(r => r.ok ? r.json() : null),
-    ]).then(([geo, hasilResp]) => {
-        if (!geo) return;
-        const items = (hasilResp && hasilResp.items) || [];
-        const byNama = {};
-        items.forEach(it => { byNama[(it.nama_wilayah || '').toUpperCase()] = it; });
+      Promise.all([
+          fetch('{{ url_for("static", filename="geojson/Kabupaten-Kota (Provinsi Jawa Barat).geojson") }}').then(r => r.ok ? r.json() : null),
+          fetch('{{ url_for("map.api_hasil") }}').then(r => r.ok ? r.json() : null),
+      ]).then(([geo, hasilResp]) => {
+          if (!geo) return;
+          const items = (hasilResp && hasilResp.items) || [];
+          const byNama = {};
+          items.forEach(it => { byNama[(it.nama_wilayah || '').toUpperCase()] = it; });
 
-        const layer = L.geoJSON(geo, {
-            style: f => {
-                const matched = byNama[pickName(f.properties || {})];
-                const fill = matched ? colorMap[matched.kategori] || '#cbd5e1' : '#cbd5e1';
-                return { fillColor: fill, weight: 1, color: '#fff', fillOpacity: 0.85 };
-            },
-            onEachFeature: (f, lyr) => {
-                const matched = byNama[pickName(f.properties || {})];
-                if (matched) {
-                    lyr.bindPopup(
-                        '<strong>' + matched.nama_wilayah + '</strong><br>' +
-                        'Kategori: <strong>' + matched.kategori + '</strong> (Cluster ' + matched.cluster + ')'
-                    );
-                }
-            }
-        }).addTo(map);
-        try { map.fitBounds(layer.getBounds(), { padding: [10, 10] }); } catch (_) {}
-    }).catch(() => {});
-})();
+          const layer = L.geoJSON(geo, {
+              style: f => {
+                  const matched = byNama[pickName(f.properties || {})];
+                  const fill = matched ? colorMap[matched.kategori] || '#cbd5e1' : '#cbd5e1';
+                  return { fillColor: fill, weight: 1, color: '#fff', fillOpacity: 0.85 };
+              },
+              onEachFeature: (f, lyr) => {
+                  const matched = byNama[pickName(f.properties || {})];
+                  if (matched) {
+                      lyr.bindPopup(
+                          '<strong>' + matched.nama_wilayah + '</strong><br>' +
+                          'Kategori: <strong>' + matched.kategori + '</strong> (Cluster ' + matched.cluster + ')'
+                      );
+                  }
+              }
+          }).addTo(map);
+          try { map.fitBounds(layer.getBounds(), { padding: [10, 10] }); } catch (_) {}
+      }).catch(() => {});
+  })();
 </script>
 {% endblock %}
