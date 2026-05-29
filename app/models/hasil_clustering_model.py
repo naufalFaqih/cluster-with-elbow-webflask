@@ -100,6 +100,83 @@ def distribusi() -> list[dict]:
 
 
 # ---------------------------------------------------------------------------
+# Cluster statistics for map visualisation (PRD #39)
+# ---------------------------------------------------------------------------
+KATEGORI_ORDER = {"Tinggi": 0, "Sedang": 1, "Rendah": 2}
+KATEGORI_DESC = {
+    "Tinggi": "Akses digital tinggi — ketimpangan rendah",
+    "Sedang": "Akses digital menengah — ketimpangan sedang",
+    "Rendah": "Akses digital rendah — ketimpangan tinggi",
+}
+
+
+def cluster_stats() -> list[dict]:
+    """Aggregate per-kategori untuk panel statistik & tabel ringkasan.
+
+    Output per baris:
+      cluster_no       — nomor display 1..n urut Tinggi → Sedang → Rendah
+      cluster_id       — id cluster mentah dari sklearn
+      kategori         — Tinggi / Sedang / Rendah
+      jumlah           — jumlah wilayah dalam cluster
+      persentase       — % dari total
+      rata_skor        — rata-rata "skor ketimpangan" wilayah dalam cluster
+                         (skor = 1 - rata-rata 4 indikator; 0 = tanpa ketimpangan)
+      keterangan       — deskripsi human-readable
+    """
+    rows = get_db().fetchall(
+        """
+        SELECT  h.cluster,
+                h.kategori,
+                d.internet,
+                d.laptop,
+                d.smartphone,
+                d.literasi_digital
+        FROM    hasil_clustering h
+        JOIN    data_ketimpangan d ON d.id = h.data_ketimpangan_id
+        """
+    )
+    if not rows:
+        return []
+
+    total = len(rows)
+    grouped: dict[tuple[int, str], list[float]] = {}
+    for r in rows:
+        skor = 1.0 - (
+            float(r["internet"])
+            + float(r["laptop"])
+            + float(r["smartphone"])
+            + float(r["literasi_digital"])
+        ) / 4.0
+        key = (int(r["cluster"]), r["kategori"])
+        grouped.setdefault(key, []).append(skor)
+
+    result = []
+    for (cluster_id, kategori), skors in grouped.items():
+        result.append(
+            {
+                "cluster_id": cluster_id,
+                "kategori": kategori,
+                "jumlah": len(skors),
+                "persentase": round(len(skors) / total * 100, 2),
+                "rata_skor": round(sum(skors) / len(skors), 4),
+                "keterangan": KATEGORI_DESC.get(kategori, ""),
+            }
+        )
+
+    # Sort: Tinggi → Sedang → Rendah, then by cluster_id
+    result.sort(key=lambda s: (KATEGORI_ORDER.get(s["kategori"], 99), s["cluster_id"]))
+    for i, item in enumerate(result, 1):
+        item["cluster_no"] = i
+
+    return result
+
+
+def total_count() -> int:
+    """Total wilayah yang sudah ter-cluster (alias of count())."""
+    return count()
+
+
+# ---------------------------------------------------------------------------
 # Evaluasi (Elbow + Silhouette)
 # ---------------------------------------------------------------------------
 def truncate_evaluasi() -> None:
