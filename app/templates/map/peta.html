@@ -135,13 +135,27 @@
     }).addTo(map);
 
     function pickName(props) {
-        return ((props.WADMKK || props.nama_kabkota || props.NAME_2 || props.name || '') + '')
-               .toUpperCase().trim();
+        // GADM real GeoJSON: NAME_2 + TYPE_2 ("Kabupaten" / "Kota" / "Water Body")
+        let name = ((props.NAME_2 || props.WADMKK || props.nama_kabkota || props.name || '') + '')
+                   .toUpperCase().trim();
+        const type = ((props.TYPE_2 || '') + '').toUpperCase().trim();
+
+        // Skip non-administrative features (e.g. Waduk Cirata)
+        if (type && type !== 'KABUPATEN' && type !== 'KOTA') return null;
+
+        // If TYPE_2 is set, build canonical name; some NAME_2 already include "KOTA " prefix
+        if (type) {
+            if (name.startsWith('KOTA ')) name = name.slice(5);
+            if (name.startsWith('KABUPATEN ')) name = name.slice(10);
+            return type + ' ' + name;
+        }
+        return name;
     }
     function findMatch(byNama, nama) {
         if (!nama) return null;
+        if (byNama[nama]) return byNama[nama];
+        // Legacy fallbacks for placeholder/alternate GeoJSON formats
         const candidates = [
-            nama,
             'KABUPATEN ' + nama,
             'KOTA ' + nama,
             nama.replace(/^KAB\.?\s+/i, 'KABUPATEN '),
@@ -245,16 +259,24 @@
 
         const layer = L.geoJSON(geo, {
             style: function (f) {
-                const matched = findMatch(byNama, pickName(f.properties || {}));
+                const nama = pickName(f.properties || {});
+                if (!nama) {
+                    // Non-administrative (e.g. water body): subtle blue, no interaction
+                    return { fillColor: '#bfdbfe', weight: 0.5, color: '#93c5fd', fillOpacity: 0.5 };
+                }
+                const matched = findMatch(byNama, nama);
                 const fill = matched ? COLORS[matched.kategori] || '#cbd5e1' : '#cbd5e1';
                 return { fillColor: fill, weight: 1, color: '#fff', fillOpacity: 0.78 };
             },
             onEachFeature: function (f, lyr) {
                 const nama = pickName(f.properties || {});
+                if (!nama) return;  // skip Water Body
                 const matched = findMatch(byNama, nama);
 
-                // Permanent label (nama wilayah on map)
-                lyr.bindTooltip(matched ? matched.nama_wilayah : nama, {
+                // Permanent label (nama wilayah on map) — strip prefix for compactness
+                const labelText = (matched ? matched.nama_wilayah : nama)
+                                  .replace(/^(KABUPATEN|KOTA)\s+/i, '');
+                lyr.bindTooltip(labelText, {
                     permanent: true,
                     direction: 'center',
                     className: 'peta-label'
