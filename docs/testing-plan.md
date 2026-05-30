@@ -23,6 +23,17 @@ Notasi:
 | L07  | Logout                                | klik menu Logout                       | Redirect ke `/auth/login` + flash    |       |
 | L08  | Akses dashboard setelah logout        | GET `/dashboard/`                      | Redirect ke `/auth/login`            |       |
 
+### 1.1 Register
+
+| TC   | Skenario                              | Input                                  | Output Diharapkan                    | Hasil |
+|------|---------------------------------------|----------------------------------------|--------------------------------------|-------|
+| R01  | Register valid                        | nama, username baru, password sama     | Redirect ke login + flash sukses     |       |
+| R02  | Username duplikat                     | username yang sudah terdaftar          | Flash "Username sudah digunakan"     |       |
+| R03  | Password tidak sama                   | password dan konfirmasi berbeda        | Flash "Konfirmasi password tidak sesuai" |   |
+| R04  | Field kosong                          | form kosong                            | Flash field wajib diisi              |       |
+| R05  | Login akun baru                       | username/password hasil register       | Redirect ke dashboard                |       |
+| R06  | Akses register saat sudah login       | GET `/auth/register`                   | Redirect ke dashboard                |       |
+
 ---
 
 ## 2. Kelola Data (PRD #29)

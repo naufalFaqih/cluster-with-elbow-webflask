@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Login — Pemetaan Ketimpangan Digital Jawa Barat</title>
+    <title>Register - Pemetaan Ketimpangan Digital Jawa Barat</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
 </head>
 <body>
@@ -23,8 +23,8 @@
                     </svg>
                 </div>
                 <div>
-                    <h2>Pemetaan Ketimpangan Digital</h2>
-                    <p class="muted">Provinsi Jawa Barat</p>
+                    <h2>Daftar Akun</h2>
+                    <p class="muted">Pemetaan Ketimpangan Digital Jawa Barat</p>
                 </div>
             </div>
 
@@ -42,21 +42,29 @@
                 <div class="flash flash-danger" style="margin-bottom:16px;">{{ error }}</div>
             {% endif %}
 
-            <form method="post" action="{{ url_for('auth.login') }}" class="form-grid" style="grid-template-columns:1fr;">
+            <form method="post" action="{{ url_for('auth.register') }}" class="form-grid" style="grid-template-columns:1fr;">
+                <div class="form-group">
+                    <label class="form-label" for="nama">Nama</label>
+                    <input class="form-control" id="nama" name="nama" type="text" value="{{ form_data.nama }}" required autofocus />
+                </div>
                 <div class="form-group">
                     <label class="form-label" for="username">Username</label>
-                    <input class="form-control" id="username" name="username" type="text" required autofocus />
+                    <input class="form-control" id="username" name="username" type="text" value="{{ form_data.username }}" required />
                 </div>
                 <div class="form-group">
                     <label class="form-label" for="password">Password</label>
                     <input class="form-control" id="password" name="password" type="password" required />
                 </div>
-                <button type="submit" class="btn btn-primary" style="justify-content:center;">Masuk</button>
+                <div class="form-group">
+                    <label class="form-label" for="confirm_password">Konfirmasi Password</label>
+                    <input class="form-control" id="confirm_password" name="confirm_password" type="password" required />
+                </div>
+                <button type="submit" class="btn btn-primary" style="justify-content:center;">Daftar</button>
             </form>
 
             <p class="form-help" style="text-align:center;margin-top:18px;">
-                Belum punya akun?
-                <a href="{{ url_for('auth.register') }}"><strong>Daftar sekarang</strong></a>
+                Sudah punya akun?
+                <a href="{{ url_for('auth.login') }}"><strong>Masuk</strong></a>
             </p>
         </div>
     </div>
