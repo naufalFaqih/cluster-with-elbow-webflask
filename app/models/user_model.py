@@ -15,6 +15,14 @@ def find_by_username(username: str) -> Optional[dict]:
     )
 
 
+def username_exists(username: str) -> bool:
+    row = get_db().fetchone(
+        "SELECT id FROM users WHERE username = %s",
+        (username,),
+    )
+    return row is not None
+
+
 def find_by_id(user_id: int) -> Optional[dict]:
     return get_db().fetchone(
         "SELECT id, nama, username, role FROM users WHERE id = %s",
