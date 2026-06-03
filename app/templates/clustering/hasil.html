@@ -12,8 +12,8 @@
         Export Hasil
     </a>
     <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;margin-left:8px;">
-        <input type="hidden" name="n_clusters" value="3" />
-        <button class="btn btn-outline" type="submit">Jalankan Ulang (k=3)</button>
+        <input type="hidden" name="n_clusters" value="auto" />
+        <button class="btn btn-outline" type="submit">Jalankan Ulang Auto k</button>
     </form>
 {% endblock %}
 

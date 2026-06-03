@@ -134,9 +134,9 @@
       </div>
       <div style="margin-top: 14px; text-align: center">
         <form method="post" action="{{ url_for('clustering.proses') }}" style="display: inline">
-          <input type="hidden" name="n_clusters" value="3" />
+          <input type="hidden" name="n_clusters" value="auto" />
           <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}" />
-          <button type="submit" class="btn btn-primary">Proses Clustering</button>
+          <button type="submit" class="btn btn-primary">Proses Clustering Auto k</button>
         </form>
       </div>
     </div>

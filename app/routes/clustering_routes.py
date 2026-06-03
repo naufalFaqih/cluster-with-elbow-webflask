@@ -44,6 +44,13 @@ def _safe_number(value: Any):
     return f
 
 
+def _persist_evaluasi(result: evaluation_service.EvaluasiResult) -> None:
+    hasil_clustering_model.truncate_evaluasi()
+    hasil_clustering_model.insert_evaluasi(
+        evaluation_service.merge_for_storage(result)
+    )
+
+
 @bp.route("/normalisasi")
 @login_required
 def normalisasi():
@@ -66,7 +73,9 @@ def elbow():
     rows = data_ketimpangan_model.all_data()
     elbow_data: list[dict] = []
     silhouette_data: list[dict] = []
-    rekomendasi: int | None = None
+    rekomendasi_elbow: int | None = None
+    rekomendasi_silhouette: int | None = None
+    rekomendasi_final: int | None = None
     error: str | None = None
 
     run_now = request.method == "POST" or request.args.get("run") == "1"
@@ -78,16 +87,15 @@ def elbow():
             result = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=10)
             elbow_data = result.elbow
             silhouette_data = result.silhouette
-            rekomendasi = result.rekomendasi_silhouette
+            rekomendasi_elbow = result.rekomendasi_elbow
+            rekomendasi_silhouette = result.rekomendasi_silhouette
+            rekomendasi_final = result.rekomendasi_final
 
             # Persist evaluasi (replace previous)
-            hasil_clustering_model.truncate_evaluasi()
-            hasil_clustering_model.insert_evaluasi(
-                evaluation_service.merge_for_storage(result)
-            )
+            _persist_evaluasi(result)
 
             flash(
-                f"Analisis selesai. Rekomendasi k = {rekomendasi}." if rekomendasi
+                f"Analisis selesai. Rekomendasi k final = {rekomendasi_final}." if rekomendasi_final
                 else "Analisis Elbow selesai.",
                 "success",
             )
@@ -102,7 +110,9 @@ def elbow():
         "clustering/elbow.html",
         elbow_data=elbow_data,
         silhouette_data=silhouette_data,
-        rekomendasi=rekomendasi,
+        rekomendasi_elbow=rekomendasi_elbow,
+        rekomendasi_silhouette=rekomendasi_silhouette,
+        rekomendasi_final=rekomendasi_final,
         error=error,
     )
 
@@ -111,11 +121,14 @@ def elbow():
 @login_required
 def proses():
     """Jalankan K-Means dan SIMPAN hasil ke DB (PRD #21)."""
-    try:
-        n_clusters = int(request.form.get("n_clusters", 3))
-    except ValueError:
-        n_clusters = 3
-    n_clusters = max(1, min(n_clusters, 10))
+    raw_n_clusters = (request.form.get("n_clusters") or "").strip().lower()
+    use_auto_k = raw_n_clusters in ("", "auto")
+    manual_n_clusters: int | None = None
+    if not use_auto_k:
+        try:
+            manual_n_clusters = int(raw_n_clusters)
+        except ValueError:
+            use_auto_k = True
 
     rows = data_ketimpangan_model.all_data()
     if not rows:
@@ -125,6 +138,19 @@ def proses():
     try:
         df = preprocessing_service.to_feature_matrix(rows)
         matrix, _ = normalization_service.normalize(df)
+        max_clusters = max(1, min(10, len(matrix)))
+
+        if use_auto_k:
+            if len(matrix) >= 2:
+                evaluasi = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=10)
+                _persist_evaluasi(evaluasi)
+                n_clusters = evaluasi.rekomendasi_final or min(3, max_clusters)
+            else:
+                n_clusters = 1
+        else:
+            n_clusters = manual_n_clusters or 3
+
+        n_clusters = max(1, min(n_clusters, max_clusters))
         result = kmeans_service.run_kmeans(matrix, n_clusters=n_clusters)
         hasil_rows = kmeans_service.build_hasil_rows(df, matrix, result)
 
@@ -133,7 +159,8 @@ def proses():
         hasil_clustering_model.insert_many(hasil_rows)
 
         flash(
-            f"Clustering K-Means (k={n_clusters}) berhasil. "
+            f"Clustering K-Means (k={n_clusters}) berhasil"
+            f"{' berdasarkan rekomendasi Elbow' if use_auto_k else ''}. "
             "Label kategori dipetakan dari centroid (Tinggi/Sedang/Rendah).",
             "success",
         )
@@ -173,7 +200,14 @@ def api_elbow():
     """Compute Elbow + Silhouette on-the-fly for dashboard widget."""
     rows = data_ketimpangan_model.all_data()
     if not rows:
-        return jsonify({"elbow": [], "silhouette": [], "rekomendasi": None})
+        return jsonify({
+            "elbow": [],
+            "silhouette": [],
+            "rekomendasi": None,
+            "rekomendasi_elbow": None,
+            "rekomendasi_silhouette": None,
+            "rekomendasi_final": None,
+        })
     try:
         df = preprocessing_service.to_feature_matrix(rows)
         matrix, _ = normalization_service.normalize(df)
@@ -187,11 +221,22 @@ def api_elbow():
                     {"k": r["k"], "score": _safe_number(r["score"])}
                     for r in result.silhouette
                 ],
-                "rekomendasi": result.rekomendasi_silhouette,
+                "rekomendasi": result.rekomendasi_final,
+                "rekomendasi_elbow": result.rekomendasi_elbow,
+                "rekomendasi_silhouette": result.rekomendasi_silhouette,
+                "rekomendasi_final": result.rekomendasi_final,
             }
         )
     except Exception as exc:  # noqa: BLE001
-        return jsonify({"error": str(exc), "elbow": [], "silhouette": []}), 400
+        return jsonify({
+            "error": str(exc),
+            "elbow": [],
+            "silhouette": [],
+            "rekomendasi": None,
+            "rekomendasi_elbow": None,
+            "rekomendasi_silhouette": None,
+            "rekomendasi_final": None,
+        }), 400
 
 
 # ---------------------------------------------------------------------------

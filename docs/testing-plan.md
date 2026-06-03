@@ -78,7 +78,7 @@ Notasi:
 | C02  | Jalankan Elbow Method                        | Grafik SSE turun saat k naik (siku terlihat)      |       |
 | C03  | Silhouette Score                             | Bar chart k=2..7, skor pada rentang -1..1         |       |
 | C04  | Rekomendasi k                                | Banner sukses menampilkan k optimal               |       |
-| C05  | Proses Clustering k=3                        | Flash sukses, tabel hasil terisi 27 baris         |       |
+| C05  | Proses Clustering auto-k                     | Flash sukses menyebut k rekomendasi, tabel hasil terisi 27 baris | |
 | C06  | Label kategori                               | 3 kategori muncul: Tinggi/Sedang/Rendah           |       |
 | C07  | Re-run clustering                            | Tabel hasil tidak duplikat (replaced)             |       |
 | C08  | Konsistensi label antar run                  | Kategori sama untuk wilayah yang sama             |       |

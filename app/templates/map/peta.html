@@ -8,9 +8,9 @@
 
 {% block topbar_actions %}
     <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;">
-        <input type="hidden" name="n_clusters" value="3" />
+        <input type="hidden" name="n_clusters" value="auto" />
         <input type="hidden" name="next" value="{{ url_for('map.peta') }}" />
-        <button class="btn btn-primary" type="submit">Refresh Cluster</button>
+        <button class="btn btn-primary" type="submit">Refresh Cluster Auto k</button>
     </form>
 {% endblock %}
 

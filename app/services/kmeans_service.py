@@ -68,6 +68,8 @@ def label_clusters_by_centroid(
     * Hitung rata-rata centroid per cluster (1 nilai skalar per cluster).
     * Urutkan dari tertinggi → terendah.
     * Mapping ke ``Tinggi``, ``Sedang``, ``Rendah``.
+    * Jika jumlah cluster > 3, urutan centroid dibagi ke tiga kategori
+      agar peta, statistik, dan export tetap memakai label yang sama.
 
     Konsisten meskipun nomor cluster scikit-learn berubah.
     """
@@ -84,8 +86,10 @@ def label_clusters_by_centroid(
         mapping[int(order[0])] = "Tinggi"
         mapping[int(order[1])] = "Rendah"
     else:
-        for rank, idx in enumerate(order):
-            mapping[int(idx)] = f"Cluster {rank + 1}"
+        groups = np.array_split(order, len(label_pool))
+        for label, group in zip(label_pool, groups):
+            for idx in group:
+                mapping[int(idx)] = label
     return mapping
 
 

@@ -29,13 +29,16 @@
         </div>
     {% endif %}
 
-    {% if rekomendasi %}
+    {% if rekomendasi_final %}
         <div class="alert-info-soft" style="background:#dcfce7;border-color:#bbf7d0;color:#166534;">
             <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="20 6 9 17 4 12"></polyline>
             </svg>
-            <span>Rekomendasi jumlah cluster optimal: <strong>k = {{ rekomendasi }}</strong>
-                (Silhouette Score tertinggi).</span>
+            <span>
+                Rekomendasi final: <strong>k = {{ rekomendasi_final }}</strong>
+                (Elbow utama{% if rekomendasi_elbow %}: k={{ rekomendasi_elbow }}{% endif %}{% if rekomendasi_silhouette %},
+                Silhouette: k={{ rekomendasi_silhouette }}{% endif %}).
+            </span>
         </div>
     {% endif %}
 
