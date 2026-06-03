@@ -433,6 +433,19 @@ a:hover { color: var(--primary-dark); }
 
 .form-help { font-size: 12px; color: var(--text-muted); }
 
+.cluster-k-form {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.cluster-k-select {
+    width: auto;
+    min-width: 132px;
+    height: 38px;
+}
+
 /* Flash messages --------------------------------------------------------- */
 .flash-messages {
     margin: 16px 24px 0;

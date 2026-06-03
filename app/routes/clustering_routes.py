@@ -30,6 +30,9 @@ from app.services import (
 
 bp = Blueprint("clustering", __name__, url_prefix="/clustering")
 
+MIN_CLUSTER_CHOICES = 2
+MAX_CLUSTER_CHOICES = 10
+
 
 def _safe_number(value: Any):
     """Convert NaN/inf -> None for JSON-friendly responses."""
@@ -135,22 +138,36 @@ def proses():
         flash("Belum ada data ketimpangan untuk diproses.", "warning")
         return redirect(url_for("dashboard.index"))
 
+    next_url = request.form.get("next") or url_for("dashboard.index")
+
     try:
         df = preprocessing_service.to_feature_matrix(rows)
         matrix, _ = normalization_service.normalize(df)
-        max_clusters = max(1, min(10, len(matrix)))
+        if len(matrix) < MIN_CLUSTER_CHOICES:
+            flash("Minimal butuh 2 data untuk menjalankan clustering.", "danger")
+            return redirect(next_url)
+
+        max_clusters = min(MAX_CLUSTER_CHOICES, len(matrix))
 
         if use_auto_k:
-            if len(matrix) >= 2:
-                evaluasi = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=10)
-                _persist_evaluasi(evaluasi)
-                n_clusters = evaluasi.rekomendasi_final or min(3, max_clusters)
-            else:
-                n_clusters = 1
+            evaluasi = evaluation_service.run_evaluasi(
+                matrix, k_min=1, k_max=MAX_CLUSTER_CHOICES
+            )
+            _persist_evaluasi(evaluasi)
+            n_clusters = evaluasi.rekomendasi_final or min(3, max_clusters)
         else:
             n_clusters = manual_n_clusters or 3
+            if n_clusters < MIN_CLUSTER_CHOICES:
+                flash("Jumlah cluster minimal adalah k=2.", "danger")
+                return redirect(next_url)
+            if n_clusters > max_clusters:
+                flash(
+                    f"Jumlah cluster maksimal adalah k={max_clusters} untuk data saat ini.",
+                    "danger",
+                )
+                return redirect(next_url)
 
-        n_clusters = max(1, min(n_clusters, max_clusters))
+        n_clusters = max(MIN_CLUSTER_CHOICES, min(n_clusters, max_clusters))
         result = kmeans_service.run_kmeans(matrix, n_clusters=n_clusters)
         hasil_rows = kmeans_service.build_hasil_rows(df, matrix, result)
 
@@ -169,7 +186,6 @@ def proses():
     except Exception as exc:  # noqa: BLE001
         flash(f"Gagal menjalankan clustering: {exc}", "danger")
 
-    next_url = request.form.get("next") or url_for("dashboard.index")
     return redirect(next_url)
 
 

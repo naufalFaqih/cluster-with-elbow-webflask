@@ -133,10 +133,15 @@
         </ul>
       </div>
       <div style="margin-top: 14px; text-align: center">
-        <form method="post" action="{{ url_for('clustering.proses') }}" style="display: inline">
-          <input type="hidden" name="n_clusters" value="auto" />
+        <form method="post" action="{{ url_for('clustering.proses') }}" class="cluster-k-form">
+          <select class="form-control cluster-k-select" name="n_clusters" aria-label="Pilih jumlah cluster">
+            <option value="auto">Auto (Elbow)</option>
+            {% for k in range(2, 11) %}
+              <option value="{{ k }}">k = {{ k }}</option>
+            {% endfor %}
+          </select>
           <input type="hidden" name="next" value="{{ url_for('dashboard.index') }}" />
-          <button type="submit" class="btn btn-primary">Proses Clustering Auto k</button>
+          <button type="submit" class="btn btn-primary">Proses Clustering</button>
         </form>
       </div>
     </div>

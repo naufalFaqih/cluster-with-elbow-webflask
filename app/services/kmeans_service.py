@@ -34,8 +34,8 @@ def run_kmeans(
     """Jalankan K-Means + label kategori berdasarkan centroid (PRD #20)."""
     if matrix is None or len(matrix) == 0:
         raise ValueError("Matrix kosong, tidak dapat clustering.")
-    if n_clusters < 1:
-        raise ValueError("n_clusters minimal 1.")
+    if n_clusters < 2:
+        raise ValueError("n_clusters minimal 2.")
 
     model = KMeans(
         n_clusters=n_clusters,

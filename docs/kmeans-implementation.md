@@ -136,7 +136,8 @@ Parameter:
 - `random_state=42` — agar hasil reproducible.
 - `n_init=10` — KMeans mencoba 10 inisialisasi acak; centroid terbaik dipakai.
 - `n_clusters` default berasal dari `rekomendasi_final`, bukan hard-code `3`.
-  Override manual tetap dapat dikirim melalui form jika dibutuhkan.
+  Admin dan user dapat memilih override manual melalui form dengan batas
+  minimal `k = 2` dan maksimal `min(10, jumlah_data)`.
 
 ---
 

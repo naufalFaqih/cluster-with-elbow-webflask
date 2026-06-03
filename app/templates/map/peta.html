@@ -7,10 +7,15 @@
 {% endblock %}
 
 {% block topbar_actions %}
-    <form method="post" action="{{ url_for('clustering.proses') }}" style="display:inline;">
-        <input type="hidden" name="n_clusters" value="auto" />
+    <form method="post" action="{{ url_for('clustering.proses') }}" class="cluster-k-form">
+        <select class="form-control cluster-k-select" name="n_clusters" aria-label="Pilih jumlah cluster">
+            <option value="auto">Auto (Elbow)</option>
+            {% for k in range(2, 11) %}
+                <option value="{{ k }}">k = {{ k }}</option>
+            {% endfor %}
+        </select>
         <input type="hidden" name="next" value="{{ url_for('map.peta') }}" />
-        <button class="btn btn-primary" type="submit">Refresh Cluster Auto k</button>
+        <button class="btn btn-primary" type="submit">Refresh Cluster</button>
     </form>
 {% endblock %}
 
