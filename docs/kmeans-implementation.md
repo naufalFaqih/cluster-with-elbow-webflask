@@ -84,6 +84,13 @@ for k in range(1, 11):
 Grafik `SSE` vs `k` ditampilkan dengan Chart.js. Titik "siku" (elbow)
 menunjukkan jumlah cluster yang optimal.
 
+Sistem mendeteksi siku secara otomatis dengan metode jarak maksimum:
+
+1. Normalisasi titik `(k, SSE)` ke rentang 0..1.
+2. Tarik garis dari titik evaluasi pertama ke titik evaluasi terakhir.
+3. Pilih titik interior dengan jarak terbesar terhadap garis tersebut sebagai
+   `rekomendasi_elbow`.
+
 ### 4.2 Silhouette Score
 
 ```python
@@ -97,9 +104,22 @@ rekomendasi_k = max(silhouette, key=lambda r: r["score"])["k"]
 ```
 
 - Silhouette tidak terdefinisi untuk `k = 1`.
-- Sistem **menampilkan rekomendasi k** = nilai dengan score tertinggi.
+- Sistem menampilkan `rekomendasi_silhouette` = nilai dengan score tertinggi
+  sebagai pembanding kualitas cluster.
 - Hasil disimpan ke tabel `evaluasi_clustering` (`jumlah_cluster`, `sse`,
   `silhouette_score`).
+
+### 4.3 Rekomendasi k Final
+
+Proses clustering default menggunakan auto-k:
+
+```python
+rekomendasi_final = rekomendasi_elbow or rekomendasi_silhouette or 3
+```
+
+Elbow menjadi rekomendasi utama. Silhouette dipakai sebagai fallback jika
+Elbow tidak bisa dihitung, misalnya karena titik evaluasi terlalu sedikit.
+Nilai fallback `3` tetap dibatasi oleh jumlah data yang tersedia.
 
 ---
 
@@ -115,6 +135,9 @@ Parameter:
 
 - `random_state=42` — agar hasil reproducible.
 - `n_init=10` — KMeans mencoba 10 inisialisasi acak; centroid terbaik dipakai.
+- `n_clusters` default berasal dari `rekomendasi_final`, bukan hard-code `3`.
+  Admin dan user dapat memilih override manual melalui form dengan batas
+  minimal `k = 2` dan maksimal `min(10, jumlah_data)`.
 
 ---
 
@@ -134,8 +157,9 @@ mapping = {
 }
 ```
 
-Untuk `k = 2` → label `Tinggi` & `Rendah`. Untuk `k > 3` → label numerik
-`Cluster 1..k` (urut dari rata-rata centroid tertinggi ke terendah).
+Untuk `k = 2` → label `Tinggi` & `Rendah`. Untuk `k > 3`, urutan centroid
+tetap dikelompokkan ke tiga kategori: bagian atas `Tinggi`, bagian tengah
+`Sedang`, dan bagian bawah `Rendah`.
 
 **Konsekuensi**: meskipun di run berikutnya sklearn mengembalikan nomor
 cluster yang berbeda, **kategori** (Tinggi/Sedang/Rendah) tetap konsisten
