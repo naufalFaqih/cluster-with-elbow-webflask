@@ -22,35 +22,17 @@ def _clamp_k(k: int, k_min: int, k_max: int) -> int:
 
 
 def _recommend_elbow(elbow: list[dict]) -> int | None:
-    """Pilih titik siku dengan jarak maksimum dari garis awal-akhir SSE."""
-    if len(elbow) < 3:
+    """Pilih k tujuan dari penurunan SSE absolut terbesar."""
+    if len(elbow) < 2:
         return None
 
-    k_values = np.array([float(row["k"]) for row in elbow], dtype=float)
     sse_values = np.array([float(row["sse"]) for row in elbow], dtype=float)
-
-    k_span = float(k_values.max() - k_values.min())
-    sse_span = float(sse_values.max() - sse_values.min())
-    if k_span == 0 or sse_span == 0:
+    drops = sse_values[:-1] - sse_values[1:]
+    if len(drops) == 0 or float(drops.max()) <= 0:
         return None
 
-    points = np.column_stack(
-        (
-            (k_values - k_values.min()) / k_span,
-            (sse_values - sse_values.min()) / sse_span,
-        )
-    )
-    start = points[0]
-    end = points[-1]
-    line = end - start
-    line_norm = float(np.linalg.norm(line))
-    if line_norm == 0:
-        return None
-
-    interior = points[1:-1]
-    distances = np.abs(np.cross(line, interior - start)) / line_norm
-    best_idx = int(np.argmax(distances)) + 1
-    return int(elbow[best_idx]["k"])
+    best_drop_idx = int(np.argmax(drops))
+    return int(elbow[best_drop_idx + 1]["k"])
 
 
 def run_evaluasi(
