@@ -227,7 +227,9 @@ def api_elbow():
     try:
         df = preprocessing_service.to_feature_matrix(rows)
         matrix, _ = normalization_service.normalize(df)
-        result = evaluation_service.run_evaluasi(matrix, k_min=1, k_max=7)
+        result = evaluation_service.run_evaluasi(
+            matrix, k_min=1, k_max=MAX_CLUSTER_CHOICES
+        )
         return jsonify(
             {
                 "elbow": [
