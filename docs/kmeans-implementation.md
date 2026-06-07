@@ -84,12 +84,17 @@ for k in range(1, 11):
 Grafik `SSE` vs `k` ditampilkan dengan Chart.js. Titik "siku" (elbow)
 menunjukkan jumlah cluster yang optimal.
 
-Sistem mendeteksi siku secara otomatis dengan metode jarak maksimum:
+Sistem mendeteksi siku secara otomatis dari penurunan SSE absolut terbesar:
 
-1. Normalisasi titik `(k, SSE)` ke rentang 0..1.
-2. Tarik garis dari titik evaluasi pertama ke titik evaluasi terakhir.
-3. Pilih titik interior dengan jarak terbesar terhadap garis tersebut sebagai
+1. Hitung selisih `SSE(k-1) - SSE(k)` untuk setiap pasangan k berurutan.
+2. Pilih k tujuan dengan penurunan SSE terbesar sebagai
    `rekomendasi_elbow`.
+3. Jika beberapa penurunan bernilai sama, pilih k terkecil agar hasil
+   deterministik.
+
+Seluruh entrypoint evaluasi menggunakan rentang maksimum yang sama,
+`k = 1..10`, agar rekomendasi pada halaman Elbow, API dashboard, dan proses
+auto-k tetap konsisten.
 
 ### 4.2 Silhouette Score
 

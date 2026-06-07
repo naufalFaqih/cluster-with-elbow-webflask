@@ -76,7 +76,7 @@ Notasi:
 |------|----------------------------------------------|---------------------------------------------------|-------|
 | C01  | Buka halaman Normalisasi                     | Tabel raw + `*_norm` rentang 0..1                 |       |
 | C02  | Jalankan Elbow Method                        | Grafik SSE turun saat k naik (siku terlihat)      |       |
-| C03  | Silhouette Score                             | Bar chart k=2..7, skor pada rentang -1..1         |       |
+| C03  | Silhouette Score                             | Bar chart k=2..10, skor pada rentang -1..1        |       |
 | C04  | Rekomendasi k                                | Banner sukses menampilkan k optimal               |       |
 | C05  | Proses Clustering auto-k                     | Flash sukses menyebut k rekomendasi, tabel hasil terisi 27 baris | |
 | C06  | Pilih manual k=2                             | Flash sukses menyebut k=2, tabel hasil terisi     |       |
@@ -85,6 +85,7 @@ Notasi:
 | C09  | Re-run clustering                            | Tabel hasil tidak duplikat (replaced)             |       |
 | C10  | Konsistensi label antar run                  | Kategori sama untuk wilayah yang sama             |       |
 | C11  | Hapus semua data → run                       | Flash warning "Belum ada data ketimpangan"        |       |
+| C12  | Konsistensi rekomendasi Elbow                | Halaman, API dashboard, dan auto-k merekomendasikan k=2 | |
 
 ---
 
