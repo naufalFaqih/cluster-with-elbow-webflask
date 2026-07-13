@@ -17,6 +17,10 @@ KATEGORI_COLORS = {
     "Sedang": "#eab308",   # yellow
     "Rendah": "#dc2626",   # red — akses rendah, ketimpangan tinggi
 }
+KATEGORI_COLORS = {
+    "Rendah": "#16a34a",   # green - ketimpangan rendah
+    "Tinggi": "#dc2626",   # red - ketimpangan tinggi
+}
 
 
 def _skor_ketimpangan(item: dict) -> float | None:

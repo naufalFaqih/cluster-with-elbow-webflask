@@ -392,9 +392,8 @@ a:hover { color: var(--primary-dark); }
     font-weight: 600;
 }
 
-.badge-tinggi { background: #dcfce7; color: #15803d; }
-.badge-sedang { background: #fef3c7; color: #92400e; }
-.badge-rendah { background: #fee2e2; color: #991b1b; }
+.badge-tinggi { background: #fee2e2; color: #991b1b; }
+.badge-rendah { background: #dcfce7; color: #15803d; }
 .badge-default { background: #e5e7eb; color: #374151; }
 
 .badge-role-admin { background: #ede9fe; color: #5b21b6; }
