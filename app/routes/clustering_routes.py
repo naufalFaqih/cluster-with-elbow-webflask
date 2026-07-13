@@ -178,7 +178,7 @@ def proses():
         flash(
             f"Clustering K-Means (k={n_clusters}) berhasil"
             f"{' berdasarkan rekomendasi Elbow' if use_auto_k else ''}. "
-            "Label kategori dipetakan dari centroid (Tinggi/Sedang/Rendah).",
+            "Label kategori ketimpangan dipetakan dari centroid (Rendah/Tinggi).",
             "success",
         )
     except preprocessing_service.PreprocessingError as exc:

@@ -55,22 +55,15 @@
                     <li>
                         <span class="swatch-box" style="background:#16a34a"></span>
                         <span>
-                            <div class="legend-label">Cluster 1 (Tinggi)</div>
-                            <div class="legend-desc">Akses digital tinggi — ketimpangan rendah</div>
-                        </span>
-                    </li>
-                    <li>
-                        <span class="swatch-box" style="background:#eab308"></span>
-                        <span>
-                            <div class="legend-label">Cluster 2 (Sedang)</div>
-                            <div class="legend-desc">Akses digital menengah</div>
+                            <div class="legend-label">Ketimpangan Rendah</div>
+                            <div class="legend-desc">Skor ketimpangan digital lebih rendah</div>
                         </span>
                     </li>
                     <li>
                         <span class="swatch-box" style="background:#dc2626"></span>
                         <span>
-                            <div class="legend-label">Cluster 3 (Rendah)</div>
-                            <div class="legend-desc">Akses digital rendah — ketimpangan tinggi</div>
+                            <div class="legend-label">Ketimpangan Tinggi</div>
+                            <div class="legend-desc">Skor ketimpangan digital lebih tinggi</div>
                         </span>
                     </li>
                 </ul>
@@ -128,8 +121,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-    const COLORS = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
-    const ORDER  = { 'Tinggi': 1, 'Sedang': 2, 'Rendah': 3 };
+    const COLORS = { 'Rendah': '#16a34a', 'Tinggi': '#dc2626' };
+    const ORDER  = { 'Rendah': 1, 'Tinggi': 2 };
 
     // -------- Map setup --------
     const map = L.map('peta', { scrollWheelZoom: true, zoomControl: true })
