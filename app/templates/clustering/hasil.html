@@ -1,139 +1,126 @@
-{% extends "layouts/base.html" %}
+{% extends "layouts/base.html" %} {% block title %}Hasil Clustering — Pemetaan Ketimpangan Digital{% endblock %} {% block topbar_actions %}
+<a class="btn btn-outline" href="{{ url_for('clustering.export', fmt='csv') }}">CSV</a>
+<a class="btn btn-primary" href="{{ url_for('clustering.export', fmt='excel') }}" style="margin-left: 8px">
+  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
+    <polyline points="7 11 12 16 17 11"></polyline>
+    <line x1="12" y1="4" x2="12" y2="16"></line>
+  </svg>
+  Export Hasil
+</a>
+<form method="post" action="{{ url_for('clustering.proses') }}" class="cluster-k-form" style="margin-left: 8px">
+  <select class="form-control cluster-k-select" name="n_clusters" aria-label="Pilih jumlah cluster">
+    <option value="auto">Auto (Elbow)</option>
+    {% for k in range(2, 11) %}
+    <option value="{{ k }}">k = {{ k }}</option>
+    {% endfor %}
+  </select>
+  <input type="hidden" name="next" value="{{ url_for('clustering.hasil') }}" />
+  <button class="btn btn-outline" type="submit">Jalankan Ulang</button>
+</form>
+{% endblock %} {% block content %}
+<div class="page-header">
+  <h2>Hasil Clustering</h2>
+  <p>Hasil pengelompokan kabupaten/kota berdasarkan indikator ketimpangan digital</p>
+</div>
 
-{% block title %}Hasil Clustering — Pemetaan Ketimpangan Digital{% endblock %}
+<!-- Ringkasan kategori -->
+<div class="stat-grid" style="grid-template-columns: repeat(auto-fit, minmax(180px, 1fr))">
+  {% set ringkasan = {'Rendah': 0, 'Tinggi': 0} %} {% for d in distribusi %}{% set _ = ringkasan.update({d.kategori: d.jumlah}) %}{% endfor %}
 
-{% block topbar_actions %}
-    <a class="btn btn-outline" href="{{ url_for('clustering.export', fmt='csv') }}">CSV</a>
-    <a class="btn btn-primary" href="{{ url_for('clustering.export', fmt='excel') }}" style="margin-left:8px;">
-        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2 -2v-2"></path>
-            <polyline points="7 11 12 16 17 11"></polyline><line x1="12" y1="4" x2="12" y2="16"></line>
-        </svg>
-        Export Hasil
-    </a>
-    <form method="post" action="{{ url_for('clustering.proses') }}" class="cluster-k-form" style="margin-left:8px;">
-        <select class="form-control cluster-k-select" name="n_clusters" aria-label="Pilih jumlah cluster">
-            <option value="auto">Auto (Elbow)</option>
-            {% for k in range(2, 11) %}
-                <option value="{{ k }}">k = {{ k }}</option>
-            {% endfor %}
+  <div class="stat-card">
+    <div class="stat-label">Total Wilayah</div>
+    <div class="stat-icon-wrap bg-blue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg>
+    </div>
+    <div class="stat-value">{{ items | length }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Ketimpangan Rendah</div>
+    <div class="stat-icon-wrap" style="background: #dcfce7; color: #16a34a">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" transform="rotate(180 12 12)"></polyline></svg>
+    </div>
+    <div class="stat-value" style="color: #16a34a">{{ ringkasan['Rendah'] }}</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-label">Ketimpangan Tinggi</div>
+    <div class="stat-icon-wrap" style="background: #fee2e2; color: #dc2626">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </div>
+    <div class="stat-value" style="color: #dc2626">{{ ringkasan['Tinggi'] }}</div>
+  </div>
+</div>
+
+<!-- Filter + tabel -->
+<div class="card">
+  <div class="card-body">
+    <div style="display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; margin-bottom: 14px">
+      <h3 class="card-title" style="margin: 0">Detail Hasil Clustering</h3>
+      <div style="display: flex; gap: 8px">
+        <select id="filter-kategori" class="form-control" style="padding: 6px 10px">
+          <option value="">Semua Kategori</option>
+          <option value="Rendah">Rendah</option>
+          <option value="Tinggi">Tinggi</option>
         </select>
-        <input type="hidden" name="next" value="{{ url_for('clustering.hasil') }}" />
-        <button class="btn btn-outline" type="submit">Jalankan Ulang</button>
-    </form>
-{% endblock %}
-
-{% block content %}
-    <div class="page-header">
-        <h2>Hasil Clustering</h2>
-        <p>Hasil pengelompokan kabupaten/kota berdasarkan indikator ketimpangan digital</p>
+      </div>
     </div>
 
-    <!-- Ringkasan kategori -->
-    <div class="stat-grid" style="grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));">
-        {% set ringkasan = {'Tinggi': 0, 'Sedang': 0, 'Rendah': 0} %}
-        {% for d in distribusi %}{% set _ = ringkasan.update({d.kategori: d.jumlah}) %}{% endfor %}
-
-        <div class="stat-card">
-            <div class="stat-label">Total Wilayah</div>
-            <div class="stat-icon-wrap bg-blue">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle></svg>
-            </div>
-            <div class="stat-value">{{ items | length }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Kategori Tinggi</div>
-            <div class="stat-icon-wrap" style="background:#dcfce7;color:#16a34a;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9" transform="rotate(180 12 12)"></polyline></svg>
-            </div>
-            <div class="stat-value" style="color:#16a34a;">{{ ringkasan['Tinggi'] }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Kategori Sedang</div>
-            <div class="stat-icon-wrap" style="background:#fef3c7;color:#d97706;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            </div>
-            <div class="stat-value" style="color:#d97706;">{{ ringkasan['Sedang'] }}</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Kategori Rendah</div>
-            <div class="stat-icon-wrap" style="background:#fee2e2;color:#dc2626;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </div>
-            <div class="stat-value" style="color:#dc2626;">{{ ringkasan['Rendah'] }}</div>
-        </div>
+    <div class="table-wrap">
+      <table class="table" id="tabel-hasil">
+        <thead>
+          <tr>
+            <th>Wilayah</th>
+            <th>Tahun</th>
+            <th>Internet</th>
+            <th>Laptop</th>
+            <th>Smartphone</th>
+            <th>Literasi</th>
+            <th>Cluster</th>
+            <th>Kategori</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for d in items %}
+          <tr data-kategori="{{ d.kategori }}">
+            <td>{{ d.nama_wilayah }}</td>
+            <td>{{ d.tahun }}</td>
+            <td>{{ '%.4f' % d.internet }}</td>
+            <td>{{ '%.4f' % d.laptop }}</td>
+            <td>{{ '%.4f' % d.smartphone }}</td>
+            <td>{{ '%.4f' % d.literasi_digital }}</td>
+            <td>{{ d.cluster }}</td>
+            <td>
+              {% set badge = {'Rendah': 'badge-rendah', 'Tinggi': 'badge-tinggi'} %}
+              <span class="badge {{ badge.get(d.kategori, 'badge-default') }}">{{ d.kategori }}</span>
+            </td>
+          </tr>
+          {% else %}
+          <tr>
+            <td colspan="8" style="text-align: center; color: var(--text-muted)">Belum ada hasil clustering. Jalankan proses dari dashboard atau klik tombol di atas.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
     </div>
-
-    <!-- Filter + tabel -->
-    <div class="card">
-        <div class="card-body">
-            <div style="display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;align-items:center;margin-bottom:14px;">
-                <h3 class="card-title" style="margin:0;">Detail Hasil Clustering</h3>
-                <div style="display:flex;gap:8px;">
-                    <select id="filter-kategori" class="form-control" style="padding:6px 10px;">
-                        <option value="">Semua Kategori</option>
-                        <option value="Tinggi">Tinggi</option>
-                        <option value="Sedang">Sedang</option>
-                        <option value="Rendah">Rendah</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="table-wrap">
-                <table class="table" id="tabel-hasil">
-                    <thead>
-                        <tr>
-                            <th>Wilayah</th>
-                            <th>Tahun</th>
-                            <th>Internet</th>
-                            <th>Laptop</th>
-                            <th>Smartphone</th>
-                            <th>Literasi</th>
-                            <th>Cluster</th>
-                            <th>Kategori</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for d in items %}
-                            <tr data-kategori="{{ d.kategori }}">
-                                <td>{{ d.nama_wilayah }}</td>
-                                <td>{{ d.tahun }}</td>
-                                <td>{{ '%.4f' % d.internet }}</td>
-                                <td>{{ '%.4f' % d.laptop }}</td>
-                                <td>{{ '%.4f' % d.smartphone }}</td>
-                                <td>{{ '%.4f' % d.literasi_digital }}</td>
-                                <td>{{ d.cluster }}</td>
-                                <td>
-                                    {% set badge = {'Tinggi': 'badge-tinggi', 'Sedang': 'badge-sedang', 'Rendah': 'badge-rendah'} %}
-                                    <span class="badge {{ badge.get(d.kategori, 'badge-default') }}">{{ d.kategori }}</span>
-                                </td>
-                            </tr>
-                        {% else %}
-                            <tr><td colspan="8" style="text-align:center;color:var(--text-muted);">
-                                Belum ada hasil clustering. Jalankan proses dari dashboard atau klik tombol di atas.
-                            </td></tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </div>
-{% endblock %}
-
-{% block scripts %}
+  </div>
+</div>
+{% endblock %} {% block scripts %}
 <script>
-    // Filter kategori
-    (function () {
-        const sel = document.getElementById('filter-kategori');
-        const tbody = document.querySelector('#tabel-hasil tbody');
-        if (!sel || !tbody) return;
-        sel.addEventListener('change', function () {
-            const v = sel.value;
-            tbody.querySelectorAll('tr').forEach(function (tr) {
-                if (!v) { tr.style.display = ''; return; }
-                tr.style.display = (tr.dataset.kategori === v) ? '' : 'none';
-            });
-        });
-    })();
+  // Filter kategori
+  (function () {
+    const sel = document.getElementById('filter-kategori');
+    const tbody = document.querySelector('#tabel-hasil tbody');
+    if (!sel || !tbody) return;
+    sel.addEventListener('change', function () {
+      const v = sel.value;
+      tbody.querySelectorAll('tr').forEach(function (tr) {
+        if (!v) {
+          tr.style.display = '';
+          return;
+        }
+        tr.style.display = tr.dataset.kategori === v ? '' : 'none';
+      });
+    });
+  })();
 </script>
 {% endblock %}

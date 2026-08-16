@@ -55,22 +55,15 @@
                     <li>
                         <span class="swatch-box" style="background:#16a34a"></span>
                         <span>
-                            <div class="legend-label">Cluster 1 (Tinggi)</div>
-                            <div class="legend-desc">Akses digital tinggi — ketimpangan rendah</div>
-                        </span>
-                    </li>
-                    <li>
-                        <span class="swatch-box" style="background:#eab308"></span>
-                        <span>
-                            <div class="legend-label">Cluster 2 (Sedang)</div>
-                            <div class="legend-desc">Akses digital menengah</div>
+                            <div class="legend-label">Cluster 0 — Ketimpangan Rendah</div>
+                            <div class="legend-desc">Skor ketimpangan digital lebih rendah</div>
                         </span>
                     </li>
                     <li>
                         <span class="swatch-box" style="background:#dc2626"></span>
                         <span>
-                            <div class="legend-label">Cluster 3 (Rendah)</div>
-                            <div class="legend-desc">Akses digital rendah — ketimpangan tinggi</div>
+                            <div class="legend-label">Cluster 1 — Ketimpangan Tinggi</div>
+                            <div class="legend-desc">Skor ketimpangan digital lebih tinggi</div>
                         </span>
                     </li>
                 </ul>
@@ -128,8 +121,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-    const COLORS = { 'Tinggi': '#16a34a', 'Sedang': '#eab308', 'Rendah': '#dc2626' };
-    const ORDER  = { 'Tinggi': 1, 'Sedang': 2, 'Rendah': 3 };
+    const COLORS = { 'Rendah': '#16a34a', 'Tinggi': '#dc2626' };
+    const ORDER  = { 'Rendah': 0, 'Tinggi': 1 };
 
     // -------- Map setup --------
     const map = L.map('peta', { scrollWheelZoom: true, zoomControl: true })
@@ -206,11 +199,12 @@
             return;
         }
         stats.forEach(s => {
+            const num = (ORDER[s.kategori] !== undefined ? ORDER[s.kategori] : s.cluster_no);
             const li = document.createElement('li');
             li.innerHTML =
                 '<span class="stats-label">' +
                     '<span class="dot" style="background:' + (COLORS[s.kategori] || '#94a3b8') + '"></span>' +
-                    'Cluster ' + s.cluster_no + ' (' + s.kategori + ')' +
+                    'Cluster ' + num + ' (' + s.kategori + ')' +
                 '</span>' +
                 '<span class="stats-value">' + s.jumlah + ' Wilayah</span>';
             ul.appendChild(li);
@@ -234,10 +228,11 @@
         }
         tbody.innerHTML = '';
         stats.forEach(s => {
+            const num = (ORDER[s.kategori] !== undefined ? ORDER[s.kategori] : s.cluster_no);
             const c = COLORS[s.kategori] || '#94a3b8';
             const tr = document.createElement('tr');
             tr.innerHTML =
-                '<td><span class="cluster-num" style="background:' + c + '">' + s.cluster_no + '</span></td>' +
+                '<td><span class="cluster-num" style="background:' + c + '">' + num + '</span></td>' +
                 '<td><strong>' + s.kategori + '</strong></td>' +
                 '<td>' + s.jumlah + '</td>' +
                 '<td>' + s.persentase.toFixed(2) + '%</td>' +

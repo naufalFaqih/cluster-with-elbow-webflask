@@ -88,7 +88,7 @@ def count() -> int:
 
 
 def distribusi() -> list[dict]:
-    """Jumlah anggota per kategori (Tinggi/Sedang/Rendah)."""
+    """Jumlah anggota per kategori ketimpangan (Rendah/Tinggi)."""
     return get_db().fetchall(
         """
         SELECT cluster, kategori, COUNT(*) AS jumlah
@@ -102,11 +102,15 @@ def distribusi() -> list[dict]:
 # ---------------------------------------------------------------------------
 # Cluster statistics for map visualisation (PRD #39)
 # ---------------------------------------------------------------------------
-KATEGORI_ORDER = {"Tinggi": 0, "Sedang": 1, "Rendah": 2}
+KATEGORI_ORDER = {"Rendah": 0, "Tinggi": 1}
 KATEGORI_DESC = {
     "Tinggi": "Akses digital tinggi — ketimpangan rendah",
     "Sedang": "Akses digital menengah — ketimpangan sedang",
     "Rendah": "Akses digital rendah — ketimpangan tinggi",
+}
+KATEGORI_DESC = {
+    "Rendah": "Ketimpangan digital rendah",
+    "Tinggi": "Ketimpangan digital tinggi",
 }
 
 
@@ -163,10 +167,10 @@ def cluster_stats() -> list[dict]:
             }
         )
 
-    # Sort: Tinggi → Sedang → Rendah, then by cluster_id
+    # Sort: Rendah → Tinggi, then by cluster_id
     result.sort(key=lambda s: (KATEGORI_ORDER.get(s["kategori"], 99), s["cluster_id"]))
-    for i, item in enumerate(result, 1):
-        item["cluster_no"] = i
+    for i, item in enumerate(result, 0):
+        item["cluster_no"] = KATEGORI_ORDER.get(item["kategori"], i)
 
     return result
 
