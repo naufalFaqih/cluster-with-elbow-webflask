@@ -167,10 +167,10 @@ def cluster_stats() -> list[dict]:
             }
         )
 
-    # Sort: Tinggi → Sedang → Rendah, then by cluster_id
+    # Sort: Rendah → Tinggi, then by cluster_id
     result.sort(key=lambda s: (KATEGORI_ORDER.get(s["kategori"], 99), s["cluster_id"]))
-    for i, item in enumerate(result, 1):
-        item["cluster_no"] = i
+    for i, item in enumerate(result, 0):
+        item["cluster_no"] = KATEGORI_ORDER.get(item["kategori"], i)
 
     return result
 
