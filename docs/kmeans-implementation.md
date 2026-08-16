@@ -146,29 +146,34 @@ Parameter:
 
 ---
 
-## 6. Pelabelan Centroid (`label_clusters_by_centroid`)
+## 6. Pelabelan Centroid & Standarisasi Penomoran Cluster (`label_clusters_by_centroid`)
 
 > **Pelabelan TIDAK boleh berdasarkan nomor cluster acak dari sklearn.**
 > Pelabelan dilakukan berdasarkan **rata-rata nilai centroid** per cluster
-> (4 indikator → 1 nilai skalar).
+> (4 indikator → 1 nilai skalar), lalu dipetakan secara deterministik ke penomoran cluster standar.
 
 ```python
 means = centroids.mean(axis=1)        # shape (n_clusters,)
-order = np.argsort(-means)            # descending → cluster 'paling tinggi' dulu
-mapping = {
-    order[0]: "Tinggi",
-    order[1]: "Sedang",
-    order[2]: "Rendah",
-}
+order = np.argsort(-means)            # descending → rata-rata indikator akses tertinggi dahulu
+
+mapping: dict[int, str] = {}
+if n_clusters == 2:
+    mapping[int(order[0])] = "Rendah" # Akses tinggi → Ketimpangan Digital RENDAH
+    mapping[int(order[1])] = "Tinggi" # Akses rendah → Ketimpangan Digital TINGGI
 ```
 
-Untuk `k = 2` → label `Tinggi` & `Rendah`. Untuk `k > 3`, urutan centroid
-tetap dikelompokkan ke tiga kategori: bagian atas `Tinggi`, bagian tengah
-`Sedang`, dan bagian bawah `Rendah`.
+### Standarisasi Nomor Cluster (0 & 1)
 
-**Konsekuensi**: meskipun di run berikutnya sklearn mengembalikan nomor
-cluster yang berbeda, **kategori** (Tinggi/Sedang/Rendah) tetap konsisten
-karena ditentukan oleh nilai centroid, bukan urutan label.
+Untuk menjaga konsistensi antara backend, database, tabel visualisasi, dan peta tematik, nilai numerik cluster ditetapkan secara pasti berdasarkan kategori ketimpangan:
+
+```python
+KATEGORI_CLUSTER_MAP = {"Rendah": 0, "Tinggi": 1}
+```
+
+- **Cluster 0**: Kategori **Rendah** (Ketimpangan Digital Rendah / Akses Digital Tinggi)
+- **Cluster 1**: Kategori **Tinggi** (Ketimpangan Digital Tinggi / Akses Digital Rendah)
+
+**Konsekuensi**: Meskipun pada run berikutnya `scikit-learn` mengembalikan label acak (misalnya memetakan centroid ke `0` atau `1` secara acak), hasil pengelompokan akan selalu dikonversi dan disimpan secara konsisten: **Cluster 0 = Rendah** dan **Cluster 1 = Tinggi**.
 
 ---
 
@@ -179,8 +184,8 @@ Tabel `hasil_clustering`:
 | Kolom                       | Asal                                          |
 |-----------------------------|-----------------------------------------------|
 | `data_ketimpangan_id`       | FK ke `data_ketimpangan.id`                   |
-| `cluster`                   | label numerik dari sklearn                    |
-| `kategori`                  | hasil `label_clusters_by_centroid`            |
+| `cluster`                   | nomor cluster terstandarisasi (`0` atau `1`)  |
+| `kategori`                  | hasil `label_clusters_by_centroid` (`Rendah`/`Tinggi`) |
 | `internet_norm` dst.        | nilai matrix ter-normalisasi                  |
 
 Strategi **replace**:
@@ -196,12 +201,14 @@ Dengan begitu, menjalankan ulang clustering tidak meninggalkan duplikasi.
 
 ## 8. Visualisasi & Export
 
-- **Tabel hasil** (`/clustering/hasil`) — daftar wilayah + kategori + filter.
-- **Peta tematik** (`/peta`) — Leaflet + GeoJSON; warna polygon mengikuti
-  kategori (`Tinggi=hijau`, `Sedang=kuning`, `Rendah=merah`). Popup
-  menampilkan tahun, cluster, kategori, dan 4 indikator (asli + normalisasi).
-- **Export** (`/clustering/export/excel|csv`) — file berisi nama wilayah,
-  tahun, indikator asli, indikator ternormalisasi, cluster, kategori.
+- **Tabel Hasil** (`/clustering/hasil`): Menampilkan daftar wilayah beserta kolom `cluster` (0 untuk Rendah, 1 untuk Tinggi), indikator asli, dan badge kategori.
+- **Peta Tematik** (`/peta`): Leaflet + GeoJSON Jawa Barat.
+  - Skema warna: `Cluster 0 (Rendah)` = Hijau (`#16a34a`), `Cluster 1 (Tinggi)` = Merah (`#dc2626`).
+  - Panel **Keterangan Cluster**: Menampilkan label eksplisit `Cluster 0 — Ketimpangan Rendah` dan `Cluster 1 — Ketimpangan Tinggi`.
+  - Panel **Statistik Cluster** & **Tabel Ringkasan**: Mengelompokkan dan mengurutkan secara deterministik dari `Cluster 0` lalu `Cluster 1`.
+  - Popup polygon: Menampilkan nama wilayah, cluster, kategori, skor ketimpangan, dan indikator.
+- **Dashboard** (`/dashboard`): Menampilkan statistik agregat, donut chart distribusi cluster, dan widget peta cluster dengan penomoran standar `0` dan `1`.
+- **Export** (`/clustering/export/excel|csv`): Mengunduh file laporan berisi nama wilayah, tahun, indikator asli, indikator ternormalisasi, `cluster` (0 / 1), dan `kategori` (Rendah / Tinggi).
 
 ---
 
@@ -214,7 +221,7 @@ random_state = 42
 n_init       = 10
 indikator    = [internet, laptop, smartphone, literasi_digital]
 tahun_data   = 2023
+mapping      = Cluster 0 (Rendah), Cluster 1 (Tinggi)
 ```
 
-Selama dataset & parameter di atas tidak berubah, hasil clustering & label
-kategori akan sama persis di setiap run.
+Selama dataset & parameter di atas tidak berubah, hasil clustering & label kategori akan sama persis di setiap run.
