@@ -90,6 +90,9 @@ def label_clusters_by_centroid(
     return mapping
 
 
+KATEGORI_CLUSTER_MAP = {"Rendah": 0, "Tinggi": 1}
+
+
 def build_hasil_rows(
     df: pd.DataFrame,
     matrix_norm: np.ndarray,
@@ -100,11 +103,13 @@ def build_hasil_rows(
     rows: list[dict] = []
     indikator = list(indikator)
     for i, row in df.reset_index(drop=True).iterrows():
+        kat = result.kategori_per_row[i]
+        cluster_id = KATEGORI_CLUSTER_MAP.get(kat, int(result.labels[i]))
         rows.append(
             {
                 "data_ketimpangan_id": int(row["id"]),
-                "cluster": int(result.labels[i]),
-                "kategori": result.kategori_per_row[i],
+                "cluster": cluster_id,
+                "kategori": kat,
                 "internet_norm": float(matrix_norm[i][indikator.index("internet")]),
                 "laptop_norm": float(matrix_norm[i][indikator.index("laptop")]),
                 "smartphone_norm": float(matrix_norm[i][indikator.index("smartphone")]),
@@ -112,3 +117,4 @@ def build_hasil_rows(
             }
         )
     return rows
+
