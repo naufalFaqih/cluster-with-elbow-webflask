@@ -121,8 +121,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function () {
-    const COLORS = { 'Rendah': '#16a34a', 'Tinggi': '#dc2626' };
-    const ORDER  = { 'Rendah': 0, 'Tinggi': 1 };
+    const MAP_COLORS = { 'Rendah': '#16a34a', 'Tinggi': '#dc2626' };
+    const CLUSTER_ORDER_MAP = { 'Rendah': 0, 'Tinggi': 1 };
 
     // -------- Map setup --------
     const map = L.map('peta', { scrollWheelZoom: true, zoomControl: true })
@@ -163,7 +163,7 @@
     }
 
     function renderPopup(matched) {
-        const c = COLORS[matched.kategori] || '#475569';
+        const c = MAP_COLORS[matched.kategori] || '#475569';
         return (
             '<div class="popup-title">' + matched.nama_wilayah + '</div>' +
             '<div class="popup-row">' +
@@ -199,11 +199,11 @@
             return;
         }
         stats.forEach(s => {
-            const num = (ORDER[s.kategori] !== undefined ? ORDER[s.kategori] : s.cluster_no);
+            const num = (CLUSTER_ORDER_MAP[s.kategori] !== undefined ? CLUSTER_ORDER_MAP[s.kategori] : s.cluster_no);
             const li = document.createElement('li');
             li.innerHTML =
                 '<span class="stats-label">' +
-                    '<span class="dot" style="background:' + (COLORS[s.kategori] || '#94a3b8') + '"></span>' +
+                    '<span class="dot" style="background:' + (MAP_COLORS[s.kategori] || '#94a3b8') + '"></span>' +
                     'Cluster ' + num + ' (' + s.kategori + ')' +
                 '</span>' +
                 '<span class="stats-value">' + s.jumlah + ' Wilayah</span>';
@@ -228,8 +228,8 @@
         }
         tbody.innerHTML = '';
         stats.forEach(s => {
-            const num = (ORDER[s.kategori] !== undefined ? ORDER[s.kategori] : s.cluster_no);
-            const c = COLORS[s.kategori] || '#94a3b8';
+            const num = (CLUSTER_ORDER_MAP[s.kategori] !== undefined ? CLUSTER_ORDER_MAP[s.kategori] : s.cluster_no);
+            const c = MAP_COLORS[s.kategori] || '#94a3b8';
             const tr = document.createElement('tr');
             tr.innerHTML =
                 '<td><span class="cluster-num" style="background:' + c + '">' + num + '</span></td>' +
@@ -265,7 +265,7 @@
                     return { fillColor: '#bfdbfe', weight: 0.5, color: '#93c5fd', fillOpacity: 0.5 };
                 }
                 const matched = findMatch(byNama, nama);
-                const fill = matched ? COLORS[matched.kategori] || '#cbd5e1' : '#cbd5e1';
+                const fill = matched ? MAP_COLORS[matched.kategori] || '#cbd5e1' : '#cbd5e1';
                 return { fillColor: fill, weight: 1, color: '#fff', fillOpacity: 0.78 };
             },
             onEachFeature: function (f, lyr) {
